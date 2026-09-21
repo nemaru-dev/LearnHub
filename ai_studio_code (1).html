@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Knowledge Collector ✨</title>
+    <link href="https://fonts.googleapis.com/css2?family=Mitr:wght@300;400;500&display=swap" rel="stylesheet">
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+    
+    <style>
+        :root {
+            --primary: #6c5ce7; --secondary: #a29bfe; --bg: #f0f2f5;
+            --card-bg: #ffffff; --text-main: #2d3436; --accent: #00cec9;
+            --shadow: 0 4px 15px rgba(0,0,0,0.08); --danger: #ff7675;
+        }
+
+        * { box-sizing: border-box; font-family: 'Mitr', sans-serif; -webkit-tap-highlight-color: transparent; }
+        body { background-color: var(--bg); color: var(--text-main); margin: 0; padding: 10px; min-height: 100vh; }
+        .container { max-width: 1000px; margin: auto; }
+
+        /* Login UI */
+        .login-box { background: var(--card-bg); padding: 40px 20px; border-radius: 30px; text-align: center; box-shadow: var(--shadow); margin-top: 15vh; }
+        .btn-google { background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white; border: none; padding: 15px 30px; border-radius: 50px; cursor: pointer; width: 100%; max-width: 280px; }
+
+        /* Header */
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; background: white; padding: 10px 15px; border-radius: 15px; box-shadow: var(--shadow); }
+        .user-info { display: flex; align-items: center; gap: 8px; font-size: 0.9rem; }
+        .user-info img { width: 32px; height: 32px; border-radius: 50%; }
+
+        /* Search Area */
+        .search-section { background: #eeebff; padding: 15px; border-radius: 20px; margin-bottom: 15px; box-shadow: var(--shadow); }
+        .search-results { display: flex; overflow-x: auto; gap: 12px; padding: 10px 0; scrollbar-width: none; }
+        .search-results::-webkit-scrollbar { display: none; }
+        .result-card { min-width: 160px; width: 160px; background: white; padding: 8px; border-radius: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+        .result-card img { width: 100%; border-radius: 10px; }
+        .result-title { font-size: 0.7rem; height: 32px; overflow: hidden; margin: 5px 0; line-height: 1.2; color: #555; }
+
+        /* Video Display */
+        .video-grid { display: grid; grid-template-columns: 1fr; gap: 20px; }
+        .video-card { background: white; border-radius: 20px; box-shadow: var(--shadow); overflow: hidden; display: flex; flex-direction: column; transition: 0.3s; }
+        .video-card:hover { transform: translateY(-5px); }
+        
+        .video-title-tab {
+            padding: 10px 15px;
+            background: #f8f9fe;
+            border-bottom: 1px solid #eee;
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: var(--primary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .iframe-wrap { position: relative; padding-top: 56.25%; background: #000; }
+        .iframe-wrap iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0; }
+        
+        .card-actions { display: flex; justify-content: space-around; padding: 12px; background: #fff; }
+        .tool-btn { background: #f0f2f5; border: none; padding: 8px 15px; border-radius: 10px; font-size: 0.8rem; cursor: pointer; }
+
+        /* Admin Controls */
+        .admin-panel { background: var(--card-bg); padding: 15px; border-radius: 20px; margin-bottom: 15px; box-shadow: var(--shadow); }
+        .input-group { display: flex; flex-direction: column; gap: 10px; margin-top: 10px; }
+        input, select { width: 100%; padding: 12px; border-radius: 12px; border: 1px solid #ddd; font-size: 1rem; outline: none; }
+        input:focus { border-color: var(--secondary); }
+        .btn-primary { background: var(--primary); color: white; padding: 12px; border-radius: 12px; border: none; font-weight: 500; cursor: pointer; }
+        .btn-accent { background: var(--accent); color: white; padding: 12px; border-radius: 12px; border: none; font-weight: 500; cursor: pointer; }
+
+        /* Modals */
+        .modal { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); padding: 20px; align-items: center; justify-content: center; backdrop-filter: blur(3px); }
+        .modal-content { background: white; padding: 25px; border-radius: 25px; width: 100%; max-width: 350px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
+
+        @media (min-width: 600px) {
+            .input-group { flex-direction: row; }
+            .video-grid { grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <!-- Login Page -->
+    <div id="loginPage" class="login-box">
+        <div style="font-size: 3rem; margin-bottom: 10px;">✨</div>
+        <h2 style="color: var(--primary); margin: 0;">Knowledge Collector</h2>
+        <p style="margin-bottom: 30px; color: #7f8c8d;">บันทึกวิดีโอความรู้ส่วนตัวของคุณ</p>
+        <button class="btn-google" onclick="login()">🚀 เข้าสู่ระบบด้วย Google</button>
+    </div>
+
+    <!-- Main App Content -->
+    <div id="mainApp" style="display:none;">
+        <div class="header">
+            <div class="user-info"><img id="userImg" src=""> <b id="userName"></b></div>
+            <button onclick="auth.signOut()" style="background:none; border:none; color:#95a5a6; font-size:0.8rem;">Logout</button>
+        </div>
+
+        <!-- Section: ค้นหา -->
+        <div class="search-section">
+            <span style="font-size:0.8rem; color:var(--primary); font-weight:500;">🔍 ค้นหาและบันทึกความรู้ใหม่</span>
+            <div class="input-group">
+                <input type="text" id="searchQuery" placeholder="พิมพ์สิ่งที่คุณอยากเรียนรู้...">
+                <button class="btn-accent" onclick="searchYouTube()">ค้นหา</button>
+            </div>
+            <div id="searchResults" class="search-results">
+                <p style="color:#bdc3c7; font-size:0.8rem; padding:10px;">ผลการค้นหาจะขึ้นที่นี่...</p>
+            </div>
+        </div>
+
+        <!-- Section: จัดการหมวดหมู่และลิงก์ -->
+        <div class="admin-panel">
+            <span style="font-size:0.8rem; color:var(--primary); font-weight:500;">📚 จัดการคลังข้อมูล</span>
+            <div class="input-group">
+                <select id="parentCatSelect"><option value="none">-- เป็นหมวดหลัก --</option></select>
+                <input type="text" id="catInput" placeholder="ชื่อหมวดหมู่ใหม่...">
+                <button class="btn-primary" onclick="addCategory()">+ สร้าง</button>
+            </div>
+            <div class="input-group" style="margin-top:15px; border-top:1px solid #eee; pt:15px;">
+                <input type="text" id="videoUrl" placeholder="วางลิงก์ YouTube ที่นี่...">
+                <button class="btn-primary" onclick="addVideoByUrl()">บันทึกจากลิงก์</button>
+            </div>
+        </div>
+
+        <div style="margin-bottom: 15px;">
+            <select id="viewFilter" onchange="renderVideos()" style="background: white; border: none; box-shadow: var(--shadow); font-weight: bold; color: var(--primary); border-radius:15px;">
+                <option value="all">💎 คลังความรู้ทั้งหมด</option>
+            </select>
+        </div>
+
+        <div id="videoDisplay" class="video-grid"></div>
+    </div>
+</div>
+
+<!-- Modal: บันทึก -->
+<div id="saveModal" class="modal">
+    <div class="modal-content">
+        <h3 id="modalTitleText" style="color:var(--primary); font-size:0.9rem; margin-bottom:20px; line-height:1.4;">บันทึกลงคลัง ✨</h3>
+        <select id="modalCatSelect" style="margin-bottom: 20px;"></select>
+        <button class="btn-primary" style="width: 100%; margin-bottom: 10px;" onclick="executeQuickSave()">ตกลง</button>
+        <button onclick="closeModal('saveModal')" style="width: 100%; background: #eee; border-radius: 12px; padding:10px; border:none;">ยกเลิก</button>
+    </div>
+</div>
+
+<!-- Modal: ย้าย/แก้ไข -->
+<div id="editModal" class="modal">
+    <div class="modal-content">
+        <h3 style="color: var(--primary); margin: 0 0 20px;">ย้ายหมวดหมู่ 💡</h3>
+        <select id="editCatSelect" style="margin-bottom: 25px;"></select>
+        <button class="btn-primary" style="width: 100%; margin-bottom: 10px;" onclick="saveEdit()">บันทึก</button>
+        <button onclick="closeModal('editModal')" style="width: 100%; background: #eee; border-radius: 12px; padding:10px; border:none;">ยกเลิก</button>
+    </div>
+</div>
+
+<!-- Modal: ยืนยันการลบ -->
+<div id="deleteModal" class="modal">
+    <div class="modal-content">
+        <h3 style="color: #ff7675; margin-bottom: 15px;">ยืนยันการลบ? 🗑️</h3>
+        <p style="font-size:0.85rem; color:#7f8c8d; margin-bottom:25px;">วิดีโอนี้จะถูกลบออกจากคลังของคุณ</p>
+        <button id="confirmDeleteBtn" style="width: 100%; background:#ff7675; color:white; margin-bottom:10px; padding:12px; border:none; border-radius:12px; font-weight:bold;">ลบเลย</button>
+        <button onclick="closeModal('deleteModal')" style="width: 100%; background: #eee; border-radius: 12px; padding:10px; border:none;">ยกเลิก</button>
+    </div>
+</div>
+
+<script>
+    // --- ตั้งค่า YouTube API และ Firebase ---
+    const YT_API_KEY = "AIzaSyBVsxZxnjoMEE6uCk3qaAoenOLEdbgg3U4";
+    const firebaseConfig = {
+        apiKey: "AIzaSyDWr7Ev6aPzwNPTfuRYp46Pb_a-uJboiXg",
+        authDomain: "video-playlist-40cf0.firebaseapp.com",
+        projectId: "video-playlist-40cf0",
+        storageBucket: "video-playlist-40cf0.firebasestorage.app",
+        messagingSenderId: "128728975658",
+        appId: "1:128728975658:web:255d64e66af8ef66c57653",
+        databaseURL: "https://video-playlist-40cf0-default-rtdb.asia-southeast1.firebasedatabase.app/"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.database();
+
+    let currentUser = null;
+    let myData = { categories: {}, videos: {} };
+    let editingVideoKey = null;
+    let deletingVideoKey = null;
+    let pendingVideoData = { id: '', title: '' };
+
+    function login() { auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()); }
+
+    auth.onAuthStateChanged(user => {
+        if (user) {
+            currentUser = user;
+            document.getElementById('loginPage').style.display = 'none';
+            document.getElementById('mainApp').style.display = 'block';
+            document.getElementById('userName').textContent = user.displayName;
+            document.getElementById('userImg').src = user.photoURL;
+            db.ref('users/' + user.uid).on('value', snapshot => {
+                myData = snapshot.val() || { categories: {}, videos: {} };
+                updateDropdowns();
+                renderVideos();
+            });
+        } else {
+            document.getElementById('loginPage').style.display = 'block';
+            document.getElementById('mainApp').style.display = 'none';
+        }
+    });
+
+    // --- ระบบค้นหาวิดีโอ ---
+    async function searchYouTube() {
+        const query = document.getElementById('searchQuery').value.trim();
+        if (!query) return;
+        const resultsArea = document.getElementById('searchResults');
+        resultsArea.innerHTML = "<p style='padding:10px;'>🔍 กำลังค้นหา...</p>";
+        try {
+            const res = await fetch(`https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=10&q=${encodeURIComponent(query)}&type=video&key=${YT_API_KEY}`);
+            const data = await res.json();
+            resultsArea.innerHTML = "";
+            if (data.items) {
+                data.items.forEach(item => {
+                    const card = document.createElement('div');
+                    card.className = 'result-card';
+                    card.innerHTML = `
+                        <img src="${item.snippet.thumbnails.medium.url}">
+                        <div class="result-title">${item.snippet.title}</div>
+                        <button class="btn-primary" style="width:100%; padding:5px; font-size:0.7rem;" 
+                            onclick="openSaveModal('${item.id.videoId}', '${item.snippet.title.replace(/'/g, "\\'")}')">บันทึก</button>
+                    `;
+                    resultsArea.appendChild(card);
+                });
+            }
+        } catch (err) { resultsArea.innerHTML = "Error"; }
+    }
+
+    // --- บันทึกจาก URL ---
+    async function addVideoByUrl() {
+        const urlInput = document.getElementById('videoUrl');
+        const vid = extractID(urlInput.value);
+        if (!vid) return alert("URL ไม่ถูกต้อง");
+        
+        try {
+            const res = await fetch(`https://www.googleapis.com/youtube/v3/videos?part=snippet&id=${vid}&key=${YT_API_KEY}`);
+            const data = await res.json();
+            if (data.items && data.items.length > 0) {
+                openSaveModal(vid, data.items[0].snippet.title);
+                urlInput.value = "";
+            } else { alert("ไม่พบวิดีโอ หรือ API มีปัญหา"); }
+        } catch (e) { alert("ดึงข้อมูลวิดีโอผิดพลาด"); }
+    }
+
+    function extractID(url) {
+        const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+        const match = url.match(regExp);
+        return (match && match[2].length === 11) ? match[2] : null;
+    }
+
+    function openSaveModal(videoId, title) {
+        pendingVideoData = { id: videoId, title: title };
+        document.getElementById('modalTitleText').textContent = "บันทึก: " + title;
+        document.getElementById('modalCatSelect').innerHTML = generateCategoryOptions();
+        document.getElementById('saveModal').style.display = 'flex';
+    }
+
+    function executeQuickSave() {
+        const catId = document.getElementById('modalCatSelect').value;
+        if (!catId) return alert("โปรดเลือกหมวดหมู่");
+        db.ref('users/' + currentUser.uid + '/videos').push().set({
+            catId: catId, 
+            youtubeId: pendingVideoData.id, 
+            title: pendingVideoData.title, 
+            addedAt: Date.now()
+        }).then(() => closeModal('saveModal'));
+    }
+
+    // --- ระบบลบวิดีโอ ---
+    function openDeleteModal(key) {
+        deletingVideoKey = key;
+        document.getElementById('deleteModal').style.display = 'flex';
+    }
+
+    document.getElementById('confirmDeleteBtn').onclick = function() {
+        if (deletingVideoKey) {
+            db.ref('users/' + currentUser.uid + '/videos/' + deletingVideoKey).remove().then(() => {
+                closeModal('deleteModal');
+                deletingVideoKey = null;
+            });
+        }
+    };
+
+    // --- ระบบหมวดหมู่ ---
+    function addCategory() {
+        const name = document.getElementById('catInput').value.trim();
+        const parentId = document.getElementById('parentCatSelect').value;
+        if (!name) return;
+        db.ref('users/' + currentUser.uid + '/categories').push({
+            name: name, parentId: parentId === "none" ? null : parentId
+        });
+        document.getElementById('catInput').value = '';
+    }
+
+    function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+
+    // --- ระบบแก้ไข/ย้ายหมวดหมู่ ---
+    function openEditModal(key, currentCatId, videoId) {
+        editingVideoKey = key;
+        editingVideoId = videoId; // เก็บ Video ID ไว้เผื่อดึงชื่อใหม่
+        document.getElementById('editCatSelect').innerHTML = generateCategoryOptions();
+        document.getElementById('editCatSelect').value = currentCatId;
+        document.getElementById('editModal').style.display = 'flex';
+    }
+
+    async function saveEdit() {
+        const newCatId = document.getElementById('editCatSelect').value;
+        const videoRef = db.ref('users/' + currentUser.uid + '/videos/' + editingVideoKey);
+        
+        // เมื่อกดเซฟในวิดีโอที่ไม่มีชื่อ ระบบจะพยายามดึงชื่อใหม่มาใส่ให้ด้วย
+        let updateData = { catId: newCatId };
+        
+        const currentVideo = myData.videos[editingVideoKey];
+        if (!currentVideo.title && currentVideo.youtubeId) {
+            try {
+                const res = await fetch(`https://www.googleapis.com/youtube/v3/videos?part=snippet&id=${currentVideo.youtubeId}&key=${YT_API_KEY}`);
+                const data = await res.json();
+                if (data.items && data.items.length > 0) {
+                    updateData.title = data.items[0].snippet.title;
+                }
+            } catch(e) {}
+        }
+
+        videoRef.update(updateData).then(() => closeModal('editModal'));
+    }
+
+    // --- Helper Functions ---
+    function generateCategoryOptions() {
+        const cats = myData.categories || {};
+        const mainCats = []; const subCats = {};
+        for (let id in cats) {
+            if (!cats[id].parentId) mainCats.push({ id, ...cats[id] });
+            else { 
+                if (!subCats[cats[id].parentId]) subCats[cats[id].parentId] = []; 
+                subCats[cats[id].parentId].push({ id, ...cats[id] }); 
+            }
+        }
+        let html = '<option value="">-- เลือกหมวดหมู่ --</option>';
+        mainCats.forEach(main => {
+            html += `<option value="${main.id}" style="font-weight:bold;">${main.name}</option>`;
+            if (subCats[main.id]) subCats[main.id].forEach(sub => { html += `<option value="${sub.id}">&nbsp;&nbsp;&nbsp;└ ${sub.name}</option>`; });
+        });
+        return html;
+    }
+
+    function updateDropdowns() {
+        const pSel = document.getElementById('parentCatSelect');
+        const fSel = document.getElementById('viewFilter');
+        const cats = myData.categories || {};
+        let pHTML = '<option value="none">-- เป็นหมวดหลัก --</option>';
+        for(let key in cats) if(!cats[key].parentId) pHTML += `<option value="${key}">${cats[key].name}</option>`;
+        pSel.innerHTML = pHTML;
+        fSel.innerHTML = '<option value="all">💎 คลังความรู้ทั้งหมด</option>' + generateCategoryOptions().replace('-- เลือกหมวดหมู่ --', 'แสดงตามหมวดหมู่');
+    }
+
+    function renderVideos() {
+        const display = document.getElementById('videoDisplay');
+        const filterVal = document.getElementById('viewFilter').value;
+        display.innerHTML = '';
+        const videos = myData.videos || {};
+        const cats = myData.categories || {};
+        let allowedIds = [filterVal];
+        if (filterVal !== 'all') for (let id in cats) if (cats[id].parentId === filterVal) allowedIds.push(id);
+
+        const keys = Object.keys(videos).sort((a,b)=>(videos[b].addedAt || 0) - (videos[a].addedAt || 0));
+        
+        keys.forEach(key => {
+            const v = videos[key];
+            if (filterVal !== 'all' && !allowedIds.includes(v.catId)) return;
+            
+            const card = document.createElement('div');
+            card.className = 'video-card';
+            
+            // ชื่อวิดีโอ (ถ้าไม่มีให้แสดงข้อความสำรอง)
+            const videoTitle = v.title || "📌 คลิกแก้ไขเพื่อดึงชื่อวิดีโอ";
+            
+            card.innerHTML = `
+                <div class="video-title-tab" title="${videoTitle}">${videoTitle}</div>
+                <div class="iframe-wrap">
+                    <iframe src="https://www.youtube-nocookie.com/embed/${v.youtubeId}?modestbranding=1&rel=0&iv_load_policy=3" allowfullscreen></iframe>
+                </div>
+                <div class="card-actions">
+                    <button class="tool-btn" onclick="openEditModal('${key}', '${v.catId}', '${v.youtubeId}')" style="color:var(--primary);">✎ ย้าย/อัปเดต</button>
+                    <button class="tool-btn" onclick="openDeleteModal('${key}')" style="color:#ff7675;">✖ ลบ</button>
+                </div>`;
+            display.appendChild(card);
+        });
+        if (display.innerHTML === '') display.innerHTML = '<p style="text-align:center; color:#bdc3c7; padding:40px;">ไม่มีวิดีโอในหมวดหมู่นี้ ✨</p>';
+    }
+</script>
+</body>
+</html>
