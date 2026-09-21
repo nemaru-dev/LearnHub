@@ -110,7 +110,7 @@
                     <option value="oldest">⏳ เก่าสุด</option>
                     <option value="az">ก-ฮ</option>
                 </select>
-                <button onclick="checkAndOpenShare()" style="background:var(--accent); color:#fff; width:48px; height:48px; flex-shrink:0;" title="แชร์หมวดหมู่นี้">🔗</button>
+                <button onclick="checkAndOpenShare()" style="background:var(--accent); color:#fff; width:48px; height:48px; flex-shrink:0;" title="แชร์หมวดหมู่">🔗</button>
                 <button onclick="toggleM('catMModal',1)" style="background:var(--primary); color:#fff; width:48px; height:48px; flex-shrink:0;" title="จัดการหมวดหมู่">⚙️</button>
             </div>
             <div class="search-box">
@@ -202,7 +202,7 @@
     let sharedData = null;
     let searchCache = [];
 
-    // --- AUTHENTICATION (iPhone Optimized) ---
+    // --- AUTHENTICATION ---
     auth.onAuthStateChanged(u => {
         if (u) {
             user = u; 
@@ -238,7 +238,7 @@
         });
     }
 
-    // --- SHARE SYSTEM (3-Level Tree Preserved) ---
+    // --- SHARE SYSTEM (Fixed Firebase null stripping bug) ---
     function checkAndOpenShare() {
         const f = document.getElementById('vFilter').value;
         if (f === 'all') return alert("กรุณาเลือกหมวดหมู่ที่ต้องการแชร์ก่อนครับ (ไม่สามารถแชร์ 'คลังทั้งหมด' ได้)");
@@ -253,9 +253,10 @@
         const vids = myData.videos || {};
 
         let shareCatMap = {};
-        shareCatMap[rootId] = { name: cats[rootId].name, parentId: null };
+        // ใช้ 'root' แทน null เพื่อป้องกันไม่ให้ Firebase ลบฟิลด์ทิ้ง
+        shareCatMap[rootId] = { name: cats[rootId].name, parentId: 'root' };
 
-        // เก็บหมวดหมู่ลูกและหลาน
+        // รวบรวมหมวดหมู่ย่อยชั้น 2 และ 3
         Object.keys(cats).forEach(id => {
             if (cats[id].parentId === rootId) {
                 shareCatMap[id] = { name: cats[id].name, parentId: rootId };
@@ -265,7 +266,7 @@
             }
         });
 
-        // เก็บวิดีโอที่ตรงกับหมวดหมู่ทั้งหมดในกิ่งนี้
+        // รวบรวมวิดีโอที่ตรงกับหมวดหมู่ในกิ่งนี้
         let videosToShare = [];
         Object.keys(vids).forEach(vk => {
             if (shareCatMap[vids[vk].catId]) {
@@ -282,6 +283,7 @@
 
         db.ref('public_shares').push({
             rootCatName: cats[rootId].name,
+            rootOldId: rootId,
             catStructure: shareCatMap,
             videos: videosToShare,
             note: note,
@@ -295,46 +297,52 @@
         });
     }
 
+    // --- IMPORT SYSTEM (Fixed & Robust) ---
     async function importSharedData() {
         if (!user) return alert("กรุณาเข้าสู่ระบบด้วย Google ก่อนนำเข้าข้อมูลครับ");
+        if (!sharedData || !sharedData.catStructure) return alert("ไม่พบข้อมูลแชร์ที่สมบูรณ์");
+
         const struct = sharedData.catStructure;
         const vids = sharedData.videos || [];
         let idMapping = {};
 
         try {
-            // สร้างหมวดหมู่หลัก (Root)
-            const rootOldId = Object.keys(struct).find(k => struct[k].parentId === null);
-            if (!rootOldId) return alert("ข้อมูลที่แชร์ไม่สมบูรณ์");
+            // 1. ระบุ Root Category (รองรับทั้ง rootOldId, 'root', null และ undefined เพื่อแก้ลิงก์เดิมที่เคยแชร์ไว้)
+            const rootOldId = sharedData.rootOldId || Object.keys(struct).find(k => !struct[k].parentId || struct[k].parentId === 'root' || struct[k].parentId === null);
+            if (!rootOldId || !struct[rootOldId]) {
+                return alert("ข้อมูลที่แชร์ไม่สมบูรณ์");
+            }
 
+            // สร้างหมวดหมู่หลักใน Account ผู้รับ
             const rootRef = await uRef('categories').push();
             await rootRef.set({ name: struct[rootOldId].name + " (Shared)", parentId: null });
             idMapping[rootOldId] = rootRef.key;
 
-            // สร้างหมวดย่อยชั้นที่ 2
+            // 2. สร้างหมวดย่อยชั้นที่ 2
             for (let oldId in struct) {
-                if (struct[oldId].parentId === rootOldId) {
+                if (oldId !== rootOldId && struct[oldId].parentId === rootOldId) {
                     const childRef = await uRef('categories').push();
                     await childRef.set({ name: struct[oldId].name, parentId: idMapping[rootOldId] });
                     idMapping[oldId] = childRef.key;
                 }
             }
 
-            // สร้างหมวดย่อยชั้นที่ 3
+            // 3. สร้างหมวดย่อยชั้นที่ 3
             for (let oldId in struct) {
                 const pId = struct[oldId].parentId;
-                if (pId && pId !== rootOldId && idMapping[pId]) {
+                if (oldId !== rootOldId && pId && pId !== rootOldId && idMapping[pId]) {
                     const grandChildRef = await uRef('categories').push();
                     await grandChildRef.set({ name: struct[oldId].name, parentId: idMapping[pId] });
                     idMapping[oldId] = grandChildRef.key;
                 }
             }
 
-            // นำเข้าวิดีโอลงหมวดหมู่ใหม่ที่ตรงกัน
+            // 4. นำเข้าวิดีโอลงในหมวดใหม่ที่ตรงกัน
             for (let v of vids) {
                 await uRef('videos').push({
-                    title: v.title,
+                    title: v.title || "ไม่มีชื่อ",
                     youtubeId: v.youtubeId,
-                    type: v.type,
+                    type: v.type || 'youtube',
                     catId: idMapping[v.oldCatId] || idMapping[rootOldId],
                     addedAt: Date.now()
                 });
@@ -343,6 +351,7 @@
             alert("นำเข้าข้อมูลพร้อมหมวดหมู่ย่อยสำเร็จเรียบร้อย! ✨");
             window.location.href = window.location.origin + window.location.pathname;
         } catch (err) {
+            console.error(err);
             alert("เกิดข้อผิดพลาดในการนำเข้าข้อมูล: " + err.message);
         }
     }
@@ -377,7 +386,7 @@
         toggleM('saveModal', 1);
     }
 
-    // --- ADD FROM URL (YouTube / Drive / FB / TikTok) ---
+    // --- ADD FROM URL ---
     function extractSource(url) {
         if (url.includes('youtube.com') || url.includes('youtu.be')) {
             const m = url.match(/^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/);
@@ -429,7 +438,7 @@
         toggleM('saveModal', 0);
     }
 
-    // --- CATEGORY & UI LOGIC (3 Levels) ---
+    // --- CATEGORY & UI LOGIC ---
     function getCategoryTree() {
         const cats = myData.categories || {};
         const main = [], sub = {}, subSub = {};
@@ -466,6 +475,7 @@
         const h = generateHierarchyOptions();
 
         document.getElementById('vFilter').innerHTML = '<option value="all">💎 คลังทั้งหมด</option>' + h;
+        document.getElementById('saveCatSel').innerHTML = document.getElementById('moveCatSel').innerHTML = h;
         document.getElementById('vFilter').value = filterVal;
         document.getElementById('newCatParentSel').innerHTML = '<option value="none">-- เป็นหมวดหลัก --</option>' + h;
 
@@ -517,7 +527,6 @@
             const cats = myData.categories || {};
             let idsToDelete = [id];
 
-            // รวบรวม ID หมวดหมู่ลูกและหลานทั้งหมด
             Object.keys(cats).forEach(k => {
                 if (cats[k].parentId === id) {
                     idsToDelete.push(k);
@@ -527,10 +536,8 @@
                 }
             });
 
-            // ลบหมวดหมู่ทั้งหมด
             idsToDelete.forEach(cId => uRef(`categories/${cId}`).remove());
 
-            // ลบวิดีโอทั้งหมดที่อยู่ในหมวดหมู่เหล่านั้น
             const vids = myData.videos || {};
             Object.keys(vids).forEach(vk => {
                 if (idsToDelete.includes(vids[vk].catId)) {
