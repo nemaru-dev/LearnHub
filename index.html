@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>LearnHub | Ultimate Workspace</title>
+    <title>LearnHub | Personal Learning Hub</title>
     <link href="https://fonts.googleapis.com/css2?family=Mitr:wght@300;400;500&display=swap" rel="stylesheet">
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
@@ -13,7 +13,7 @@
         * { box-sizing: border-box; font-family: 'Mitr', sans-serif; -webkit-tap-highlight-color: transparent; }
         body { background: var(--bg); color: var(--text); margin: 0; padding: 10px; min-height: 100vh; }
         .container { max-width: 1100px; margin: auto; }
-        button { cursor: pointer; border: none; transition: 0.2s; border-radius: 12px; font-weight: 500; }
+        button { cursor: pointer; border: none; transition: 0.2s; border-radius: 12px; font-weight: 500; display: inline-flex; align-items: center; justify-content: center; }
         input, select, textarea { width: 100%; padding: 12px; border-radius: 12px; border: 1px solid #e0e0e0; font-size: 16px; outline: none; background: #fff; }
         
         .header, .panel, .v-card, .modal-content { background: #fff; box-shadow: var(--shadow); border-radius: 20px; }
@@ -21,24 +21,23 @@
         .panel { padding: 15px; margin-bottom: 15px; border-radius: 25px; }
         .source-area { background: #eff2ff; border-left: 5px solid var(--primary); }
         
-        /* Banner สำหรับผู้รับลิ้งค์ */
         #importBar { display: none; background: white; border: 2px solid var(--success); padding: 20px; border-radius: 25px; margin-bottom: 20px; text-align: center; animation: slideDown 0.5s ease; }
         @keyframes slideDown { from { transform: translateY(-20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 
         .lib-controls { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
         .search-box { position: relative; flex: 1; }
-        .search-box input { padding-left: 40px; border: 2px solid #fff; }
+        .search-box input { padding-left: 40px; border: 2px solid #fff; box-shadow: var(--shadow); }
         .search-box::before { content: '🔍'; position: absolute; left: 15px; top: 12px; font-size: 14px; opacity: 0.5; z-index: 1; }
         
-        .sort-filter-group { display: flex; gap: 8px; width: 100%; }
-        .v-select-custom { flex: 1; border-radius: 50px; font-weight: bold; color: var(--primary); box-shadow: var(--shadow); border: none; }
+        .sort-filter-group { display: flex; gap: 8px; width: 100%; flex-wrap: wrap; }
+        .v-select-custom { flex: 1; min-width: 150px; border-radius: 50px; font-weight: bold; color: var(--primary); box-shadow: var(--shadow); border: none; }
+        .action-btns { display: flex; gap: 8px; }
 
         .video-grid { display: grid; grid-template-columns: 1fr; gap: 20px; }
         .v-card { overflow: hidden; transition: 0.3s; border: 1px solid #fff; position: relative; }
         .v-card:hover { transform: translateY(-5px); }
         .v-type-tag { position: absolute; top: 48px; right: 10px; color: #fff; font-size: 0.6rem; padding: 2px 8px; border-radius: 10px; z-index: 2; opacity: 0.9; font-weight: bold; }
         .v-title { padding: 12px 15px; background: #fdfdfd; font-size: 0.85rem; color: var(--primary); line-height: 1.4; border-bottom: 1px solid #eee; min-height: 45px; }
-        
         .v-iframe { position: relative; padding-top: 56.25%; background: #000; }
         .v-iframe.tiktok-mode { padding-top: 130%; } 
         .v-iframe iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0; }
@@ -51,10 +50,10 @@
         @keyframes pop { from { transform: scale(0.95); opacity: 0; } }
         .m-header { padding: 15px 20px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; }
         .m-body { padding: 20px; overflow-y: auto; }
-        .list-item { display: flex; justify-content: space-between; padding: 12px; border-bottom: 1px solid #f8f8f8; align-items: center; text-align: left; }
+        .list-item { display: flex; justify-content: space-between; padding: 12px; border-bottom: 1px solid #f8f8f8; align-items: center; }
 
         #mainApp, #loginPage { display: none; }
-        @media (min-width: 768px) { .video-grid { grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); } .lib-controls { flex-direction: row; } .sort-filter-group { width: 60%; } }
+        @media (min-width: 768px) { .video-grid { grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); } .lib-controls { flex-direction: row; } }
     </style>
 </head>
 <body>
@@ -79,7 +78,7 @@
             <button onclick="auth.signOut().then(()=>location.reload())" style="background:none; color:#aaa; font-size:0.8rem;">Logout</button>
         </div>
 
-        <!-- เพิ่มวิดีโอ -->
+        <!-- เพิ่มบทเรียน -->
         <div class="panel source-area">
             <label style="font-size:0.8rem; color:var(--primary); font-weight:bold;">🔗 เพิ่มบทเรียนใหม่</label>
             <div style="display:flex; flex-direction:column; gap:8px; margin-top:8px;">
@@ -91,36 +90,25 @@
             </div>
         </div>
 
-        <!-- ค้นหา YouTube -->
-        <div class="panel" style="background: #f0fdf4; border-left: 5px solid var(--drive);">
-            <label style="font-size:0.8rem; color:var(--drive); font-weight:bold;">🔍 ค้นหาใน YouTube</label>
-            <div style="display:flex; gap:8px; margin-top:8px;">
-                <input type="text" id="qInp" placeholder="พิมพ์สิ่งที่อยากเรียนรู้...">
-                <button onclick="searchYT()" style="background:var(--drive); color:#fff; padding:0 25px;">ค้นหา</button>
-            </div>
-            <div id="searchRes" style="display:flex; overflow-x:auto; gap:12px; padding-top:10px; scrollbar-width:none;"></div>
-        </div>
-
-        <!-- ตัวกรอง/จัดเรียง/จัดการ -->
+        <!-- ตัวควบคุมคลัง -->
         <div class="lib-controls">
             <div class="sort-filter-group">
                 <select id="vFilter" onchange="renderVids()" class="v-select-custom"></select>
-                <select id="vSort" onchange="renderVids()" class="v-select-custom" style="max-width: 120px;">
+                <select id="vSort" onchange="renderVids()" class="v-select-custom" style="max-width: 110px; font-size: 0.8rem;">
                     <option value="newest">🕒 ล่าสุด</option>
                     <option value="oldest">⏳ เก่าสุด</option>
-                    <option value="az">🔤 ก-ฮ</option>
-                    <option value="za">🔤 ฮ-ก</option>
+                    <option value="az">ก-ฮ</option>
                 </select>
-                <button onclick="toggleM('catMModal',1)" style="background:var(--primary); color:#fff; width:48px; height:48px; flex-shrink:0;">⚙️</button>
+                <div class="action-btns">
+                    <!-- ปุ่มแชร์ (ย้ายมาไว้ตรงนี้เพื่อให้เห็นชัดเจน) -->
+                    <button onclick="checkAndOpenShare()" style="background:var(--accent); color:#fff; width:48px; height:48px;" title="แชร์หมวดหมู่">🔗</button>
+                    <!-- ปุ่มตั้งค่า -->
+                    <button onclick="toggleM('catMModal',1)" style="background:var(--primary); color:#fff; width:48px; height:48px;" title="จัดการหมวดหมู่">⚙️</button>
+                </div>
             </div>
             <div class="search-box">
-                <input type="text" id="libSearch" oninput="renderVids()" placeholder="ค้นหาคลิปในคลัง...">
+                <input type="text" id="libSearch" oninput="renderVids()" placeholder="ค้นหาคลิปในคลังของคุณ...">
             </div>
-        </div>
-
-        <!-- ปุ่มแชร์ -->
-        <div id="shareCtrl" style="text-align:center; margin-bottom:15px; display:none;">
-            <button onclick="toggleM('shareModal',1)" style="background:var(--accent); color:#fff; padding:10px 30px; border-radius:50px; font-size:0.85rem; box-shadow: var(--shadow);">🔗 แชร์หมวดหมู่นี้ให้เพื่อน</button>
         </div>
 
         <div id="vDisp" class="video-grid"></div>
@@ -128,6 +116,13 @@
 </div>
 
 <!-- Modals -->
+<div id="shareModal" class="modal" onclick="closeModalOnOutside(event, 'shareModal')">
+    <div class="modal-content"><div class="m-header"><h3>แชร์ความรู้ให้เพื่อน 🔗</h3><span onclick="toggleM('shareModal',0)" style="font-size:24px; cursor:pointer;">&times;</span></div><div class="m-body">
+    <p id="shareTargetName" style="font-weight:bold; color:var(--primary);"></p>
+    <textarea id="shareNote" placeholder="ฝากข้อความถึงเพื่อน (เช่น เอาไว้ทวนก่อนสอบนะ)..." style="width:100%; height:80px; padding:12px; border-radius:15px; border:1px solid #ddd; margin-top:10px;"></textarea>
+    <button onclick="executeGenerateShare()" style="background:var(--primary); color:#fff; width:100%; margin-top:20px; padding:15px; font-size:1rem;">คัดลอกลิงก์แชร์</button>
+</div></div></div>
+
 <div id="catMModal" class="modal" onclick="closeModalOnOutside(event, 'catMModal')">
     <div class="modal-content"><div class="m-header"><h3>จัดการข้อมูล 📁</h3><span onclick="toggleM('catMModal',0)" style="font-size:24px; cursor:pointer;">&times;</span></div><div class="m-body">
     <button onclick="scanDuplicates()" style="background:var(--danger); color:#fff; width:100%; margin-bottom:20px; padding:12px; border-radius:15px;">🔍 สแกนหาข้อมูลซ้ำ</button>
@@ -140,13 +135,6 @@
         </div>
     </div>
     <div id="catMList"></div>
-</div></div></div>
-
-<div id="shareModal" class="modal" onclick="closeModalOnOutside(event, 'shareModal')">
-    <div class="modal-content"><div class="m-header"><h3>แชร์คลังความรู้ 🔗</h3><span onclick="toggleM('shareModal',0)" style="font-size:24px; cursor:pointer;">&times;</span></div><div class="m-body">
-    <p id="shareTargetName" style="font-weight:bold; color:var(--primary);"></p>
-    <textarea id="shareNote" placeholder="ฝากข้อความถึงเพื่อน (เช่น เอาไว้ทวนก่อนสอบนะ)..." style="width:100%; height:80px; padding:12px; border-radius:15px; border:1px solid #ddd; margin-top:10px;"></textarea>
-    <button onclick="executeGenerateShare()" style="background:var(--primary); color:#fff; width:100%; margin-top:20px; padding:15px; font-size:1rem;">คัดลอกลิงก์แชร์</button>
 </div></div></div>
 
 <div id="catEditModal" class="modal"><div class="modal-content"><div class="m-header"><h3>แก้ไขหมวดหมู่</h3></div><div class="m-body"><label style="font-size:0.8rem;">ชื่อหมวด:</label><input type="text" id="editCatInp" style="margin-bottom:15px;"><label style="font-size:0.8rem;">ย้ายไปภายใต้:</label><select id="editCatPSel"></select><button onclick="saveCatEdit()" style="background:var(--primary); color:#fff; width:100%; margin-top:20px; padding:12px;">บันทึก</button></div></div></div>
@@ -170,61 +158,58 @@
         } else { document.getElementById('loginPage').style.display = 'block'; }
     });
 
-    // ตรวจสอบระบบแชร์
+    // Check Share Link
     const urlParams = new URLSearchParams(window.location.search);
     const shareId = urlParams.get('share');
     if (shareId) {
         db.ref('public_shares/' + shareId).once('value', s => {
-            if (s.exists()) {
-                sharedData = s.val();
-                document.getElementById('importBar').style.display = 'block';
-                document.getElementById('importTitle').innerText = `ลิสต์ "${sharedData.catName}" ถูกแชร์มาให้คุณ`;
-                document.getElementById('importNote').innerText = sharedData.note ? `"${sharedData.note}"` : "จากคุณ " + sharedData.ownerName;
-            }
+            if (s.exists()) { sharedData = s.val(); document.getElementById('importBar').style.display = 'block'; document.getElementById('importNote').innerText = sharedData.note ? `"${sharedData.note}"` : "จากคุณ " + sharedData.ownerName; }
         });
     }
 
     const toggleM = (id, show) => document.getElementById(id).style.display = show ? 'flex' : 'none';
     const uRef = (path) => db.ref(`users/${user.uid}/${path}`);
 
-    // --- Share Functions ---
+    // --- Share System ---
+    function checkAndOpenShare() {
+        const filterVal = document.getElementById('vFilter').value;
+        if (filterVal === 'all') return alert("กรุณาเลือกหมวดหมู่ที่ต้องการแชร์ก่อนครับ (กดแชร์ 'คลังทั้งหมด' ไม่ได้)");
+        document.getElementById('shareTargetName').innerText = "หมวดหมู่: " + myData.categories[filterVal].name;
+        toggleM('shareModal', 1);
+    }
+
     function executeGenerateShare() {
         const filterVal = document.getElementById('vFilter').value;
         const note = document.getElementById('shareNote').value.trim();
         const cats = myData.categories || {};
         let allowedIds = [filterVal];
-        // เก็บ ID หมวดลูกทั้งหมด 3 ชั้น
         Object.keys(cats).forEach(k => { if(cats[k].parentId === filterVal) { allowedIds.push(k); Object.keys(cats).forEach(k2 => { if(cats[k2].parentId === k) allowedIds.push(k2); }); } });
 
         const vidsToShare = [];
         for (let key in myData.videos) {
             const v = myData.videos[key];
-            if (allowedIds.includes(v.catId)) {
-                vidsToShare.push({ youtubeId: v.youtubeId, title: v.title || "บทเรียน", type: v.type || 'youtube' });
-            }
+            if (allowedIds.includes(v.catId)) vidsToShare.push({ youtubeId: v.youtubeId, title: v.title || "บทเรียน", type: v.type || 'youtube' });
         }
 
-        if (vidsToShare.length === 0) return alert("หมวดนี้ยังไม่มีวิดีโอที่จะแชร์ครับ");
+        if (vidsToShare.length === 0) return alert("หมวดนี้ไม่มีวิดีโอที่จะแชร์");
 
-        const shareRef = db.ref('public_shares').push();
-        shareRef.set({ catName: cats[filterVal].name, note, videos: vidsToShare, ownerName: user.displayName, createdAt: Date.now() }).then(() => {
-            const link = window.location.origin + window.location.pathname + "?share=" + shareRef.key;
+        db.ref('public_shares').push({ catName: cats[filterVal].name, note, videos: vidsToShare, ownerName: user.displayName, createdAt: Date.now() }).then(r => {
+            const link = window.location.origin + window.location.pathname + "?share=" + r.key;
             const t = document.createElement("textarea"); document.body.appendChild(t); t.value = link; t.select(); document.execCommand("copy"); document.body.removeChild(t);
-            alert("คัดลอกลิงก์แชร์แล้ว! ส่งให้เพื่อนได้เลยครับ 🔗"); toggleM('shareModal', 0);
+            alert("คัดลอกลิงก์แชร์สำเร็จ! ✨"); toggleM('shareModal', 0);
         });
     }
 
     function importSharedData() {
-        if (!user) return alert("กรุณา Login ก่อนนำเข้าครับ");
+        if (!user) return alert("กรุณา Login ก่อน");
         const r = uRef('categories').push();
         r.set({ name: sharedData.catName + " (Shared)", parentId: null }).then(() => {
             sharedData.videos.forEach(v => { uRef('videos').push({ catId: r.key, youtubeId: v.youtubeId, title: v.title, type: v.type, addedAt: Date.now() }); });
-            alert("นำเข้าสำเร็จ! ✨");
-            window.location.href = window.location.origin + window.location.pathname;
+            alert("นำเข้าสำเร็จ! ✨"); window.location.href = window.location.origin + window.location.pathname;
         });
     }
 
-    // --- อื่นๆ (เหมือนเดิม) ---
+    // --- อื่นๆ (Logic เดิม) ---
     function getCategoryTree() {
         const cats = myData.categories || {}; const main = [], sub = {}, subSub = {};
         Object.keys(cats).forEach(id => { const cat = { id, ...cats[id] }; if (!cat.parentId) main.push(cat); else if (cats[cat.parentId] && !cats[cat.parentId].parentId) { if (!sub[cat.parentId]) sub[cat.parentId] = []; sub[cat.parentId].push(cat); } else { if (!subSub[cat.parentId]) subSub[cat.parentId] = []; subSub[cat.parentId].push(cat); } });
@@ -237,13 +222,12 @@
         document.getElementById('saveCatSel').innerHTML = document.getElementById('moveCatSel').innerHTML = h;
         document.getElementById('vFilter').value = filterVal;
         document.getElementById('newCatParentSel').innerHTML = '<option value="none">-- เป็นหมวดหลัก --</option>' + h;
-        let listH = ""; main.forEach(m => { listH += `<div class="list-item"><span><b>• ${m.name}</b></span><div><button onclick="tmp.editingCatId='${m.id}'; openEditCat('${m.id}')">✎</button><button onclick="uRef('categories/${m.id}').remove()" style="color:red">🗑️</button></div></div>`; if (sub[m.id]) sub[m.id].forEach(s => { listH += `<div class="list-item"><span>&nbsp;&nbsp;&nbsp;└ ${s.name}</span><div><button onclick="tmp.editingCatId='${s.id}'; openEditCat('${s.id}')">✎</button><button onclick="uRef('categories/${s.id}').remove()" style="color:red">🗑️</button></div></div>`; if (subSub[s.id]) subSub[s.id].forEach(ss => { listH += `<div class="list-item"><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└─ ${ss.name}</span><div><button onclick="tmp.editingCatId='${ss.id}'; openEditCat('${ss.id}')">✎</button><button onclick="uRef('categories/${ss.id}').remove()" style="color:red">🗑️</button></div></div>`; }); }); });
+        let listH = ""; main.forEach(m => { listH += `<div class="list-item"><span><b>• ${m.name}</b></span><div><button onclick="tmp.editingCatId='${m.id}'; openEditCat('${m.id}')">✎</button><button onclick="uRef('categories/${m.id}').remove()" style="color:red; margin-left:10px;">🗑️</button></div></div>`; if (sub[m.id]) sub[m.id].forEach(s => { listH += `<div class="list-item"><span>&nbsp;&nbsp;&nbsp;└ ${s.name}</span><div><button onclick="tmp.editingCatId='${s.id}'; openEditCat('${s.id}')">✎</button><button onclick="uRef('categories/${s.id}').remove()" style="color:red; margin-left:10px;">🗑️</button></div></div>`; if (subSub[s.id]) subSub[s.id].forEach(ss => { listH += `<div class="list-item"><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└─ ${ss.name}</span><div><button onclick="tmp.editingCatId='${ss.id}'; openEditCat('${ss.id}')">✎</button><button onclick="uRef('categories/${ss.id}').remove()" style="color:red; margin-left:10px;">🗑️</button></div></div>`; }); }); });
         document.getElementById('catMList').innerHTML = listH || "ไม่มีหมวดหมู่"; renderVids();
     }
     function renderVids() {
         const filter = document.getElementById('vFilter').value, sort = document.getElementById('vSort').value, search = document.getElementById('libSearch').value.toLowerCase(), vids = myData.videos || {}, cats = myData.categories || {};
         let allowed = [filter]; if (filter !== 'all') Object.keys(cats).forEach(k => { if(cats[k].parentId === filter) { allowed.push(k); Object.keys(cats).forEach(k2 => { if(cats[k2].parentId === k) allowed.push(k2); }); } });
-        document.getElementById('shareCtrl').style.display = (filter === 'all' ? 'none' : 'block');
         let keys = Object.keys(vids).filter(k => { const v = vids[k]; return (filter === 'all' || allowed.includes(v.catId)) && (!search || v.title.toLowerCase().includes(search)); });
         keys.sort((a,b) => { const vA = vids[a], vB = vids[b]; if(sort==='newest') return vB.addedAt - vA.addedAt; if(sort==='oldest') return vA.addedAt - vB.addedAt; return vA.title.localeCompare(vB.title, 'th'); });
         document.getElementById('vDisp').innerHTML = keys.map(k => {
@@ -252,7 +236,6 @@
             return `<div class="v-card"><div class="v-type-tag" style="background:var(--${v.type||'primary'})">${(v.type||'YOUTUBE').toUpperCase()}</div><div class="v-title">${v.title} <br><small style="color:#aaa;">📁 ${cats[v.catId]?cats[v.catId].name:'ทั่วไป'}</small></div><div class="v-iframe ${isTikTok?'tiktok-mode':''}"><iframe src="${embed}" allowfullscreen></iframe></div><div class="card-actions"><button class="tool-btn" onclick="tmp.k='${k}'; document.getElementById('moveCatSel').value='${v.catId}'; toggleM('moveModal',1)">✎ ย้าย</button><button class="tool-btn" onclick="tmp.k='${k}'; toggleM('delModal',1)" style="color:var(--danger)">✖ ลบ</button></div></div>`;
         }).join('') || '<p style="grid-column:1/-1; text-align:center; padding:50px; color:#aaa;">ไม่พบข้อมูล ✨</p>';
     }
-    // (ฟังก์ชันเสริมอื่นๆ createCategory, searchYT, actVid, scanDuplicates... ใส่ไว้ให้ครบถ้วนตามเดิม)
     function createCategory() { const n = document.getElementById('newCatInp').value.trim(), p = document.getElementById('newCatParentSel').value; if (n) { uRef('categories').push({ name: n, parentId: p === 'none' ? null : p }); document.getElementById('newCatInp').value = ""; } }
     function openEditCat(id) { document.getElementById('editCatInp').value = myData.categories[id].name; document.getElementById('editCatPSel').innerHTML = document.getElementById('newCatParentSel').innerHTML; document.getElementById('editCatPSel').value = myData.categories[id].parentId || "none"; toggleM('catMModal', 0); toggleM('catEditModal', 1); }
     function saveCatEdit() { const n = document.getElementById('editCatInp').value.trim(), p = document.getElementById('editCatPSel').value; if (n) { uRef(`categories/${tmp.editingCatId}`).update({ name: n, parentId: p === 'none' ? null : p }); toggleM('catEditModal', 0); toggleM('catMModal', 1); } }
