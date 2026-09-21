@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>LearnHub | Smart Hierarchy</title>
+    <title>LearnHub | All-in-One Learning Hub</title>
     <link href="https://fonts.googleapis.com/css2?family=Mitr:wght@300;400;500&display=swap" rel="stylesheet">
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
@@ -23,8 +23,11 @@
         
         .lib-controls { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
         .search-box { position: relative; flex: 1; }
-        .search-box input { padding-left: 40px; }
-        .search-box::before { content: '🔍'; position: absolute; left: 15px; top: 12px; font-size: 14px; opacity: 0.5; }
+        .search-box input { padding-left: 40px; border: 2px solid #fff; box-shadow: var(--shadow); }
+        .search-box::before { content: '🔍'; position: absolute; left: 15px; top: 12px; font-size: 14px; opacity: 0.5; z-index: 1; }
+        
+        .sort-filter-group { display: flex; gap: 8px; width: 100%; }
+        .v-select-custom { flex: 1; border-radius: 50px; font-weight: bold; color: var(--primary); box-shadow: var(--shadow); border: none; }
 
         .video-grid { display: grid; grid-template-columns: 1fr; gap: 20px; }
         .v-card { overflow: hidden; transition: 0.3s; border: 1px solid #fff; position: relative; display: flex; flex-direction: column; }
@@ -36,29 +39,28 @@
         .card-actions { display: flex; justify-content: space-around; padding: 12px; background: #fff; }
         .tool-btn { background: #f8f9fb; padding: 8px 15px; font-size: 0.8rem; color: #636e72; border-radius: 10px; }
 
-        /* Modal Settings */
         .modal { display: none; position: fixed; z-index: 999; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); align-items: center; justify-content: center; }
         .modal-content { background: white; width: 95%; max-width: 420px; max-height: 85vh; display: flex; flex-direction: column; border-radius: 25px; animation: pop .3s; }
         @keyframes pop { from { transform: scale(0.95); opacity: 0; } }
         .m-header { padding: 15px 20px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; }
         .m-body { padding: 20px; overflow-y: auto; }
-        .cat-item { display: flex; justify-content: space-between; padding: 10px; border-bottom: 1px solid #f0f0f0; align-items: center; }
+        
+        .list-item { display: flex; justify-content: space-between; padding: 12px; border-bottom: 1px solid #f8f8f8; align-items: center; }
+        .dupe-card { background: #fef1f1; border: 1px solid #f9dcdc; border-radius: 15px; padding: 10px; margin-bottom: 10px; }
 
         #mainApp, #loginPage { display: none; }
-        @media (min-width: 768px) { .video-grid { grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); } .lib-controls { flex-direction: row; } }
+        @media (min-width: 768px) { .video-grid { grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); } .lib-controls { flex-direction: row; } .sort-filter-group { width: 60%; } }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <!-- Login -->
     <div id="loginPage" style="text-align:center; margin-top:15vh;">
         <h1 style="color:var(--primary); font-size:3.5rem; margin:0;">🎓 LearnHub</h1>
         <p>“Your personal learning hub.”</p><br>
-        <button onclick="auth.signInWithRedirect(new firebase.auth.GoogleAuthProvider())" style="background:linear-gradient(135deg, var(--primary), var(--secondary)); color:#fff; padding:16px 45px; border-radius:50px; font-size:1.1rem;">Login with Google</button>
+        <button onclick="auth.signInWithRedirect(new firebase.auth.GoogleAuthProvider())" style="background:linear-gradient(135deg, var(--primary), var(--secondary)); color:#fff; padding:16px 45px; border-radius:50px; font-size:1.1rem; box-shadow: var(--shadow);">Start Learning</button>
     </div>
 
-    <!-- Main App -->
     <div id="mainApp">
         <div class="header">
             <div style="display:flex; align-items:center; gap:8px;"><img id="userImg" src="" style="width:32px; border-radius:50%; border:2px solid var(--accent);"><span id="userName" style="font-weight:500;"></span></div>
@@ -66,11 +68,11 @@
         </div>
 
         <div class="panel source-area">
-            <label style="font-size:0.8rem; color:var(--primary); font-weight:bold;">🔗 เพิ่มบทเรียนใหม่</label>
+            <label style="font-size:0.8rem; color:var(--primary); font-weight:bold;">🔗 เพิ่มบทเรียน (YouTube / Google Drive)</label>
             <div style="display:flex; flex-direction:column; gap:8px; margin-top:8px;">
-                <input type="text" id="urlInp" placeholder="ลิงก์ YouTube หรือ Google Drive">
+                <input type="text" id="urlInp" placeholder="วางลิงก์วิดีโอที่นี่...">
                 <div style="display:flex; gap:8px;">
-                    <input type="text" id="manualTitle" placeholder="ชื่อบทเรียน (เลือกได้)">
+                    <input type="text" id="manualTitle" placeholder="ชื่อบทเรียน (เว้นว่างได้ถ้าเป็น YouTube)">
                     <button onclick="addSource()" style="background:var(--primary); color:#fff; padding:0 25px; white-space:nowrap;">บันทึก ✨</button>
                 </div>
             </div>
@@ -79,15 +81,21 @@
         <div class="panel" style="background: #f0fdf4; border-left: 5px solid var(--drive);">
             <label style="font-size:0.8rem; color:var(--drive); font-weight:bold;">🔍 ค้นหาใน YouTube</label>
             <div style="display:flex; gap:8px; margin-top:8px;">
-                <input type="text" id="qInp" placeholder="พิมพ์สิ่งที่อยากค้นหา...">
+                <input type="text" id="qInp" placeholder="หาอะไรใน YouTube ดี...">
                 <button onclick="searchYT()" style="background:var(--drive); color:#fff; padding:0 25px;">ค้นหา</button>
             </div>
             <div id="searchRes" style="display:flex; overflow-x:auto; gap:12px; padding-top:10px; scrollbar-width:none;"></div>
         </div>
 
         <div class="lib-controls">
-            <div style="display:flex; gap:8px; flex:1;">
-                <select id="vFilter" onchange="renderVids()" style="border-radius:50px; font-weight:bold; color:var(--primary); box-shadow: var(--shadow); border:none;"></select>
+            <div class="sort-filter-group">
+                <select id="vFilter" onchange="renderVids()" class="v-select-custom"></select>
+                <select id="vSort" onchange="renderVids()" class="v-select-custom" style="max-width: 120px;">
+                    <option value="newest">🕒 ล่าสุด</option>
+                    <option value="oldest">⏳ เก่าสุด</option>
+                    <option value="az">🔤 ก-ฮ</option>
+                    <option value="za">🔤 ฮ-ก</option>
+                </select>
                 <button onclick="toggleM('catMModal',1)" style="background:var(--primary); color:#fff; width:48px; height:48px; flex-shrink:0;">⚙️</button>
             </div>
             <div class="search-box">
@@ -100,31 +108,33 @@
 </div>
 
 <!-- Modals -->
-<div id="catMModal" class="modal"><div class="modal-content"><div class="m-header"><h3>จัดการหมวดหมู่</h3><span onclick="toggleM('catMModal',0)" style="font-size:24px; cursor:pointer;">&times;</span></div><div class="m-body">
+<div id="catMModal" class="modal"><div class="modal-content"><div class="m-header"><h3>จัดการข้อมูล</h3><span onclick="toggleM('catMModal',0)" style="font-size:24px; cursor:pointer;">&times;</span></div><div class="m-body">
+    <button onclick="scanDuplicates()" style="background:var(--danger); color:#fff; width:100%; margin-bottom:20px; padding:12px; border-radius:15px;">🔍 สแกนหาข้อมูลซ้ำในคลัง</button>
     <div style="display:flex; flex-direction:column; gap:10px; margin-bottom:20px; background:#f4f7fa; padding:15px; border-radius:15px;">
         <label style="font-size:0.8rem;">สร้างหมวดหมู่ใหม่:</label>
         <select id="newCatParentSel"><option value="none">-- เป็นหมวดหลัก --</option></select>
         <div style="display:flex; gap:5px;">
-            <input type="text" id="newCatInp" placeholder="ชื่อหมวดหมู่...">
+            <input type="text" id="newCatInp" placeholder="ชื่อหมวด...">
             <button onclick="createCategory()" style="background:var(--primary); color:#fff; padding:0 15px;">สร้าง</button>
         </div>
     </div>
     <div id="catMList"></div>
 </div></div></div>
 
-<div id="saveModal" class="modal"><div class="modal-content"><div class="m-header"><h3 id="saveMTitle" style="font-size:0.9rem;">บันทึกวิดีโอ</h3><span onclick="toggleM('saveModal',0)" style="font-size:24px; cursor:pointer;">&times;</span></div><div class="m-body">
+<div id="dupeModal" class="modal"><div class="modal-content"><div class="m-header"><h3>ข้อมูลซ้ำ ⚠️</h3><span onclick="toggleM('dupeModal',0)" style="font-size:24px; cursor:pointer;">&times;</span></div><div class="m-body" id="dupeList"></div></div></div>
+
+<div id="saveModal" class="modal"><div class="modal-content"><div class="m-header"><h3 id="saveMTitle" style="font-size:0.9rem;">บันทึกวิดีโอ</h3><span onclick="toggleM('saveModal',0)">&times;</span></div><div class="m-body">
     <select id="saveCatSel" style="margin-bottom:15px; border:2px solid var(--primary);"></select>
-    <button onclick="confirmSave()" style="background:var(--primary); color:#fff; width:100%; padding:15px;">บันทึกเข้าคลัง ✨</button>
+    <button onclick="confirmSave()" style="background:var(--primary); color:#fff; width:100%; padding:15px;">บันทึก ✨</button>
 </div></div></div>
 
-<div id="moveModal" class="modal"><div class="modal-content"><div class="m-header"><h3>ย้ายหมวดหมู่</h3><span onclick="toggleM('moveModal',0)" style="font-size:24px; cursor:pointer;">&times;</span></div><div class="m-body"><select id="moveCatSel"></select><button onclick="actVid('move')" style="background:var(--primary); color:#fff; width:100%; margin-top:20px; padding:12px;">ยืนยันการย้าย</button></div></div></div>
+<div id="moveModal" class="modal"><div class="modal-content"><div class="m-header"><h3>ย้ายหมวดหมู่</h3><span onclick="toggleM('moveModal',0)">&times;</span></div><div class="m-body"><select id="moveCatSel"></select><button onclick="actVid('move')" style="background:var(--primary); color:#fff; width:100%; margin-top:20px; padding:12px;">ย้ายทันที</button></div></div></div>
 
 <div id="delModal" class="modal"><div class="modal-content"><div class="m-body" style="text-align:center;"><h2 style="color:var(--danger)">ลบวิดีโอ?</h2><button onclick="actVid('del')" style="background:var(--danger); color:#fff; width:100%; padding:12px;">ยืนยันการลบ</button><button onclick="toggleM('delModal',0)" style="background:none; color:#aaa; margin-top:10px;">ยกเลิก</button></div></div></div>
 
 <script>
     const YT_KEY = "AIzaSyBVsxZxnjoMEE6uCk3qaAoenOLEdbgg3U4";
     const firebaseConfig = { apiKey: "AIzaSyDWr7Ev6aPzwNPTfuRYp46Pb_a-uJboiXg", authDomain: "video-playlist-40cf0.firebaseapp.com", projectId: "video-playlist-40cf0", databaseURL: "https://video-playlist-40cf0-default-rtdb.asia-southeast1.firebasedatabase.app/" };
-    
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth(), db = firebase.database();
     let user = null, myData = { categories: {}, videos: {} }, tmp = {};
@@ -140,170 +150,97 @@
     const toggleM = (id, show) => document.getElementById(id).style.display = show ? 'flex' : 'none';
     const uRef = (path) => db.ref(`users/${user.uid}/${path}`);
 
-    // --- Category Functions (Sub-category Support) ---
+    // --- Duplicate Scanner (Nbrought back!) ---
+    function scanDuplicates() {
+        const vids = myData.videos || {};
+        const cats = myData.categories || {};
+        const groups = {};
+        Object.keys(vids).forEach(k => { const v = vids[k]; if(!groups[v.youtubeId]) groups[v.youtubeId] = []; groups[v.youtubeId].push({key: k, ...v}); });
+        const dupes = Object.values(groups).filter(g => g.length > 1);
+        const list = document.getElementById('dupeList');
+        list.innerHTML = dupes.length === 0 ? "<p style='text-align:center;'>🎉 ไม่พบข้อมูลซ้ำ!</p>" : "";
+        dupes.forEach(g => {
+            const card = document.createElement('div'); card.className = 'dupe-card';
+            card.innerHTML = `<div style="font-size:0.8rem; font-weight:bold; margin-bottom:10px;">${g[0].title}</div>`;
+            g.forEach(v => {
+                const item = document.createElement('div'); item.className = 'list-item'; item.style.padding='5px 0';
+                item.innerHTML = `<span style="font-size:0.7rem;">📁 ${cats[v.catId]?cats[v.catId].name:'ทั่วไป'}</span><button onclick="uRef('videos/${v.key}').remove().then(()=>scanDuplicates())" style="background:var(--danger); color:#fff; font-size:0.6rem; padding:4px 8px;">ลบตัวนี้</button>`;
+                card.appendChild(item);
+            });
+            list.appendChild(card);
+        });
+        toggleM('catMModal', 0); toggleM('dupeModal', 1);
+    }
+
+    // --- Core Logic ---
     function createCategory() {
         const n = document.getElementById('newCatInp').value.trim();
         const p = document.getElementById('newCatParentSel').value;
-        if (n) {
-            uRef('categories').push({ name: n, parentId: p === 'none' ? null : p });
-            document.getElementById('newCatInp').value = "";
-        }
+        if (n) { uRef('categories').push({ name: n, parentId: p === 'none' ? null : p }); document.getElementById('newCatInp').value = ""; }
     }
-
-    function deleteCat(id) {
-        if (confirm("ลบหมวดหมู่นี้? (หมวดหมู่ย่อยและวิดีโอข้างในจะสูญเสียการจัดกลุ่ม)")) {
-            uRef(`categories/${id}`).remove();
-        }
-    }
-
-    // --- Core UI & Select Generators ---
-    function updateUI() {
-        const cats = myData.categories || {};
-        const filterVal = document.getElementById('vFilter').value || 'all';
-        const optionsHtml = generateHierarchyOptions();
-        
-        // Update All Selects
-        document.getElementById('vFilter').innerHTML = '<option value="all">💎 คลังความรู้ทั้งหมด</option>' + optionsHtml;
-        document.getElementById('saveCatSel').innerHTML = document.getElementById('moveCatSel').innerHTML = optionsHtml;
-        document.getElementById('vFilter').value = filterVal;
-
-        // Update Parent Selection for new categories
-        let pOpts = '<option value="none">-- เป็นหมวดหลัก --</option>';
-        Object.keys(cats).forEach(k => { if(!cats[k].parentId) pOpts += `<option value="${k}">${cats[k].name}</option>`; });
-        document.getElementById('newCatParentSel').innerHTML = pOpts;
-
-        // Update Manager List
-        const main = [], sub = {};
-        Object.keys(cats).forEach(k => { 
-            if(!cats[k].parentId) main.push({k, ...cats[k]}); 
-            else { (sub[cats[k].parentId] = sub[cats[k].parentId] || []).push({k, ...cats[k]}); }
-        });
-        
-        document.getElementById('catMList').innerHTML = main.map(m => `
-            <div class="cat-item"><span><b>•</b> ${m.name}</span><button onclick="deleteCat('${m.k}')" style="color:var(--danger); background:none; font-size:1.2rem;">🗑️</button></div>
-            ${(sub[m.k]||[]).map(s => `<div class="cat-item"><span>&nbsp;&nbsp;&nbsp;└ ${s.name}</span><button onclick="deleteCat('${s.k}')" style="color:var(--danger); background:none; font-size:1.2rem;">🗑️</button></div>`).join('')}
-        `).join('') || "<p style='text-align:center; color:#ccc;'>ยังไม่มีหมวดหมู่</p>";
-        
-        renderVids();
-    }
-
-    function generateHierarchyOptions() {
-        const cats = myData.categories || {};
-        const main = [], sub = {};
-        Object.keys(cats).forEach(k => { 
-            if(!cats[k].parentId) main.push({k, ...cats[k]}); 
-            else { (sub[cats[k].parentId] = sub[cats[k].parentId] || []).push({k, ...cats[k]}); }
-        });
-
-        let h = ""; 
-        main.forEach(m => {
-            h += `<option value="${m.k}">${m.name}</option>`;
-            if (sub[m.k]) sub[m.k].forEach(s => { h += `<option value="${s.k}">└ ${s.name}</option>`; });
-        });
-        return h;
-    }
-
-    // --- Video Logic ---
     function extractSource(url) {
         if (url.includes('youtube.com') || url.includes('youtu.be')) {
-            const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
-            const match = url.match(regExp);
-            return (match && match[2].length === 11) ? { id: match[2], type: 'youtube' } : null;
+            const m = url.match(/^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/);
+            return (m && m[2].length === 11) ? { id: m[2], type: 'youtube' } : null;
         } else if (url.includes('drive.google.com')) {
-            const match = url.match(/\/d\/(.+?)\/(view|edit|preview)/) || url.match(/id=(.+?)(&|$)/);
-            return (match && match[1]) ? { id: match[1], type: 'drive' } : null;
+            const m = url.match(/\/d\/(.+?)\/(view|edit|preview)/) || url.match(/id=(.+?)(&|$)/);
+            return (m && m[1]) ? { id: m[1], type: 'drive' } : null;
         }
         return null;
     }
-
     async function addSource() {
-        const url = document.getElementById('urlInp').value.trim();
-        const manualT = document.getElementById('manualTitle').value.trim();
-        const source = extractSource(url);
+        const url = document.getElementById('urlInp').value.trim(), manualT = document.getElementById('manualTitle').value.trim(), source = extractSource(url);
         if (!source) return alert("ลิงก์ไม่ถูกต้อง");
-
         tmp.vidData = { youtubeId: source.id, type: source.type, title: manualT };
         if (source.type === 'youtube' && !manualT) {
-            try {
-                const res = await fetch(`https://www.googleapis.com/youtube/v3/videos?part=snippet&id=${source.id}&key=${YT_KEY}`);
-                const data = await res.json();
-                if (data.items.length > 0) tmp.vidData.title = data.items[0].snippet.title;
-            } catch(e) {}
+            try { const res = await fetch(`https://www.googleapis.com/youtube/v3/videos?part=snippet&id=${source.id}&key=${YT_KEY}`); const data = await res.json(); if (data.items.length > 0) tmp.vidData.title = data.items[0].snippet.title; } catch(e) {}
         }
         if (!tmp.vidData.title) tmp.vidData.title = source.type === 'drive' ? "Drive Video" : "YouTube Video";
-
         document.getElementById('saveMTitle').innerText = "บันทึก: " + tmp.vidData.title;
         toggleM('saveModal', 1);
     }
-
     async function searchYT() {
         const q = document.getElementById('qInp').value.trim(); if (!q) return;
         document.getElementById('searchRes').innerHTML = "🔍 ค้นหา...";
         const res = await fetch(`https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=10&q=${encodeURIComponent(q)}&type=video&key=${YT_KEY}`);
         const data = await res.json();
         document.getElementById('searchRes').innerHTML = (data.items || []).map(i => `
-            <div style="min-width:150px; background:#fff; padding:10px; border-radius:15px; box-shadow:0 4px 10px rgba(0,0,0,0.05);">
+            <div style="min-width:150px; background:#fff; padding:10px; border-radius:15px; box-shadow:0 4px 10px rgba(0,0,0,0.05); text-align:center;">
                 <img src="${i.snippet.thumbnails.medium.url}" style="width:100%; border-radius:10px;">
                 <p style="font-size:0.6rem; height:25px; overflow:hidden; margin:5px 0; line-height:1.2;">${i.snippet.title}</p>
-                <button onclick="openSaveSearch('${i.id.videoId}', '${i.snippet.title.replace(/'/g,"")}')" style="background:var(--primary); color:#fff; width:100%; font-size:0.7rem; padding:6px;">บันทึก</button>
+                <button onclick="tmp.vidData={youtubeId:'${i.id.videoId}',type:'youtube',title:'${i.snippet.title.replace(/'/g,"")}'}; toggleM('saveModal',1);" style="background:var(--primary); color:#fff; width:100%; font-size:0.7rem; padding:6px;">บันทึก</button>
             </div>
         `).join('');
     }
+    function confirmSave() { uRef('videos').push({ ...tmp.vidData, catId: document.getElementById('saveCatSel').value, addedAt: Date.now() }); document.getElementById('urlInp').value = ""; toggleM('saveModal', 0); }
 
-    function openSaveSearch(id, title) {
-        tmp.vidData = { youtubeId: id, type: 'youtube', title: title };
-        document.getElementById('saveMTitle').innerText = "บันทึก: " + title;
-        toggleM('saveModal', 1);
+    function updateUI() {
+        const cats = myData.categories || {}, filterVal = document.getElementById('vFilter').value || 'all', main = [], sub = {};
+        Object.keys(cats).forEach(k => { if(!cats[k].parentId) main.push({k, ...cats[k]}); else (sub[cats[k].parentId] = sub[cats[k].parentId] || []).push({k, ...cats[k]}); });
+        let h = ""; main.forEach(m => { h += `<option value="${m.k}">${m.name}</option>`; if (sub[m.k]) sub[m.k].forEach(s => h += `<option value="${s.k}">└ ${s.name}</option>`); });
+        document.getElementById('vFilter').innerHTML = '<option value="all">💎 คลังทั้งหมด</option>' + h;
+        document.getElementById('saveCatSel').innerHTML = document.getElementById('moveCatSel').innerHTML = h;
+        document.getElementById('vFilter').value = filterVal;
+        document.getElementById('newCatParentSel').innerHTML = '<option value="none">-- เป็นหมวดหลัก --</option>' + main.map(m => `<option value="${m.k}">${m.name}</option>`).join('');
+        document.getElementById('catMList').innerHTML = main.map(m => `<div class="list-item"><span><b>•</b> ${m.name}</span><button onclick="uRef('categories/${m.k}').remove()" style="color:var(--danger); background:none; font-size:1.2rem;">🗑️</button></div>` + (sub[m.k]||[]).map(s => `<div class="list-item"><span>&nbsp;&nbsp;&nbsp;└ ${s.name}</span><button onclick="uRef('categories/${s.k}').remove()" style="color:var(--danger); background:none; font-size:1.2rem;">🗑️</button></div>`).join('')).join('') || "ไม่มีหมวดหมู่";
+        renderVids();
     }
-
-    function confirmSave() {
-        const catId = document.getElementById('saveCatSel').value;
-        if (!catId) return alert("กรุณาเลือกหมวดหมู่");
-        uRef('videos').push({ ...tmp.vidData, catId, addedAt: Date.now() });
-        document.getElementById('urlInp').value = document.getElementById('manualTitle').value = "";
-        toggleM('saveModal', 0);
-        document.getElementById('vFilter').value = catId;
-    }
-
-    const actVid = (type, k, c) => {
-        if (type === 'moveUI') { tmp.k = k; document.getElementById('moveCatSel').value = c; toggleM('moveModal', 1); }
-        else if (type === 'move') { uRef(`videos/${tmp.k}`).update({ catId: document.getElementById('moveCatSel').value }); toggleM('moveModal', 0); }
-        else if (type === 'delUI') { tmp.k = k; toggleM('delModal', 1); }
-        else if (type === 'del') { uRef(`videos/${tmp.k}`).remove(); toggleM('delModal', 0); }
-    };
 
     function renderVids() {
-        const filter = document.getElementById('vFilter').value;
-        const search = document.getElementById('libSearch').value.toLowerCase();
-        const vids = myData.videos || {};
-        const cats = myData.categories || {};
-
-        // Hierarchy Filtering Logic
-        let allowedIds = [filter];
-        if (filter !== 'all') {
-            Object.keys(cats).forEach(k => { if(cats[k].parentId === filter) allowedIds.push(k); });
-        }
-
-        document.getElementById('vDisp').innerHTML = Object.keys(vids).sort((a,b) => vids[b].addedAt - vids[a].addedAt).map(k => {
-            const v = vids[k];
-            if (filter !== 'all' && !allowedIds.includes(v.catId)) return '';
-            if (search && !v.title.toLowerCase().includes(search)) return '';
-
-            const isDrive = v.type === 'drive';
-            const embedUrl = isDrive ? `https://drive.google.com/file/d/${v.youtubeId}/preview` : `https://www.youtube-nocookie.com/embed/${v.youtubeId}?rel=0&modestbranding=1`;
-            const catName = cats[v.catId] ? cats[v.catId].name : 'ทั่วไป';
-
-            return `<div class="v-card">
-                <div class="v-type-tag" style="background:${isDrive?'var(--drive)':'var(--primary)'}">${v.type ? v.type.toUpperCase() : 'YOUTUBE'}</div>
-                <div class="v-title">${v.title} <br><small style="color:#aaa; font-weight:normal;">📁 ${catName}</small></div>
-                <div class="v-iframe"><iframe src="${embedUrl}" allowfullscreen></iframe></div>
-                <div class="card-actions">
-                    <button class="tool-btn" onclick="actVid('moveUI','${k}','${v.catId}')">✎ ย้ายหมวด</button>
-                    <button class="tool-btn" onclick="actVid('delUI','${k}')" style="color:var(--danger)">✖ ลบออก</button>
-                </div>
-            </div>`;
+        const filter = document.getElementById('vFilter').value, sort = document.getElementById('vSort').value, search = document.getElementById('libSearch').value.toLowerCase(), vids = myData.videos || {}, cats = myData.categories || {};
+        let allowed = [filter]; if (filter !== 'all') Object.keys(cats).forEach(k => { if(cats[k].parentId === filter) allowed.push(k); });
+        let keys = Object.keys(vids).filter(k => { const v = vids[k]; return (filter === 'all' || allowed.includes(v.catId)) && (!search || v.title.toLowerCase().includes(search)); });
+        keys.sort((a,b) => {
+            if(sort==='newest') return vids[b].addedAt - vids[a].addedAt;
+            if(sort==='oldest') return vids[a].addedAt - vids[b].addedAt;
+            return sort==='az' ? vids[a].title.localeCompare(vids[b].title, 'th') : vids[b].title.localeCompare(vids[a].title, 'th');
+        });
+        document.getElementById('vDisp').innerHTML = keys.map(k => {
+            const v = vids[k], isDrive = v.type === 'drive', embed = isDrive ? `https://drive.google.com/file/d/${v.youtubeId}/preview` : `https://www.youtube-nocookie.com/embed/${v.youtubeId}?rel=0&modestbranding=1`;
+            return `<div class="v-card"><div class="v-type-tag" style="background:${isDrive?'var(--drive)':'var(--primary)'}">${(v.type||'YOUTUBE').toUpperCase()}</div><div class="v-title">${v.title} <br><small style="color:#aaa; font-weight:normal;">📁 ${cats[v.catId]?cats[v.catId].name:'ทั่วไป'}</small></div><div class="v-iframe"><iframe src="${embed}" allowfullscreen></iframe></div><div class="card-actions"><button class="tool-btn" onclick="tmp.k='${k}'; document.getElementById('moveCatSel').value='${v.catId}'; toggleM('moveModal',1)">✎ ย้าย</button><button class="tool-btn" onclick="tmp.k='${k}'; toggleM('delModal',1)" style="color:var(--danger)">✖ ลบ</button></div></div>`;
         }).join('') || '<p style="grid-column:1/-1; text-align:center; padding:50px; color:#aaa;">ไม่พบข้อมูล ✨</p>';
     }
+    const actVid = (type) => { if(type==='move') uRef(`videos/${tmp.k}`).update({catId:document.getElementById('moveCatSel').value}); else uRef(`videos/${tmp.k}`).remove(); toggleM(type==='move'?'moveModal':'delModal', 0); };
 </script>
 </body>
 </html>
