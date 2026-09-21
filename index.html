@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>LearnHub | Your personal learning hub.</title>
+    <title>LearnHub | Multi-Source Learning Hub</title>
     <link href="https://fonts.googleapis.com/css2?family=Mitr:wght@300;400;500&display=swap" rel="stylesheet">
     <!-- Firebase SDK Compat -->
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
@@ -37,8 +37,11 @@
         .v-card:hover { transform: translateY(-5px); }
         .v-type-tag { position: absolute; top: 48px; right: 10px; color: #fff; font-size: 0.6rem; padding: 2px 8px; border-radius: 10px; z-index: 2; opacity: 0.9; font-weight: bold; }
         .v-title { padding: 12px 15px; background: #fdfdfd; font-size: 0.85rem; color: var(--primary); line-height: 1.4; border-bottom: 1px solid #eee; min-height: 45px; word-wrap: break-word; }
+        
+        /* สัดส่วนปกติสำหรับคลิปแนวนอน (16:9) */
         .v-iframe { position: relative; padding-top: 56.25%; background: #000; }
-        .v-iframe.tiktok-mode { padding-top: 130%; } 
+        /* สัดส่วนแนวตั้งสำหรับ TikTok และ Facebook Reels */
+        .v-iframe.vertical-mode { padding-top: 135%; } 
         .v-iframe iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0; }
         
         .card-actions { display: flex; justify-content: space-around; padding: 12px; background: #fff; }
@@ -81,7 +84,7 @@
 
         <!-- เพิ่มวิดีโอ -->
         <div class="panel source-area">
-            <label style="font-size:0.8rem; color:var(--primary); font-weight:bold;">🔗 เพิ่มบทเรียนใหม่ (YouTube / Drive / FB / TikTok)</label>
+            <label style="font-size:0.8rem; color:var(--primary); font-weight:bold;">🔗 เพิ่มบทเรียนใหม่ (YouTube / Drive / Facebook / TikTok)</label>
             <div style="display:flex; flex-direction:column; gap:8px; margin-top:8px;">
                 <input type="text" id="urlInp" placeholder="วางลิงก์วิดีโอที่นี่...">
                 <div style="display:flex; gap:8px;">
@@ -110,7 +113,7 @@
                     <option value="oldest">⏳ เก่าสุด</option>
                     <option value="az">ก-ฮ</option>
                 </select>
-                <button onclick="checkAndOpenShare()" style="background:var(--accent); color:#fff; width:48px; height:48px; flex-shrink:0;" title="แชร์หมวดหมู่">🔗</button>
+                <button onclick="checkAndOpenShare()" style="background:var(--accent); color:#fff; width:48px; height:48px; flex-shrink:0;" title="แชร์หมวดหมู่นี้">🔗</button>
                 <button onclick="toggleM('catMModal',1)" style="background:var(--primary); color:#fff; width:48px; height:48px; flex-shrink:0;" title="จัดการหมวดหมู่">⚙️</button>
             </div>
             <div class="search-box">
@@ -183,7 +186,6 @@
 </div>
 
 <script>
-    // --- FIREBASE CONFIGURATION ---
     const YT_KEY = "AIzaSyBVsxZxnjoMEE6uCk3qaAoenOLEdbgg3U4";
     const firebaseConfig = { 
         apiKey: "AIzaSyDWr7Ev6aPzwNPTfuRYp46Pb_a-uJboiXg", 
@@ -224,7 +226,7 @@
     const uRef = (path) => db.ref(`users/${user.uid}/${path}`);
     function closeModalOnOutside(event, id) { if(event.target.className === 'modal') toggleM(id, 0); }
 
-    // --- CHECK INCOMING SHARE ON PAGE LOAD ---
+    // --- READ SHARE LINK ---
     const urlParams = new URLSearchParams(window.location.search);
     const shareId = urlParams.get('share');
     if (shareId) {
@@ -238,7 +240,7 @@
         });
     }
 
-    // --- SHARE SYSTEM (Fixed Firebase null stripping bug) ---
+    // --- SHARE SYSTEM ---
     function checkAndOpenShare() {
         const f = document.getElementById('vFilter').value;
         if (f === 'all') return alert("กรุณาเลือกหมวดหมู่ที่ต้องการแชร์ก่อนครับ (ไม่สามารถแชร์ 'คลังทั้งหมด' ได้)");
@@ -253,10 +255,8 @@
         const vids = myData.videos || {};
 
         let shareCatMap = {};
-        // ใช้ 'root' แทน null เพื่อป้องกันไม่ให้ Firebase ลบฟิลด์ทิ้ง
         shareCatMap[rootId] = { name: cats[rootId].name, parentId: 'root' };
 
-        // รวบรวมหมวดหมู่ย่อยชั้น 2 และ 3
         Object.keys(cats).forEach(id => {
             if (cats[id].parentId === rootId) {
                 shareCatMap[id] = { name: cats[id].name, parentId: rootId };
@@ -266,7 +266,6 @@
             }
         });
 
-        // รวบรวมวิดีโอที่ตรงกับหมวดหมู่ในกิ่งนี้
         let videosToShare = [];
         Object.keys(vids).forEach(vk => {
             if (shareCatMap[vids[vk].catId]) {
@@ -297,7 +296,6 @@
         });
     }
 
-    // --- IMPORT SYSTEM (Fixed & Robust) ---
     async function importSharedData() {
         if (!user) return alert("กรุณาเข้าสู่ระบบด้วย Google ก่อนนำเข้าข้อมูลครับ");
         if (!sharedData || !sharedData.catStructure) return alert("ไม่พบข้อมูลแชร์ที่สมบูรณ์");
@@ -307,18 +305,13 @@
         let idMapping = {};
 
         try {
-            // 1. ระบุ Root Category (รองรับทั้ง rootOldId, 'root', null และ undefined เพื่อแก้ลิงก์เดิมที่เคยแชร์ไว้)
             const rootOldId = sharedData.rootOldId || Object.keys(struct).find(k => !struct[k].parentId || struct[k].parentId === 'root' || struct[k].parentId === null);
-            if (!rootOldId || !struct[rootOldId]) {
-                return alert("ข้อมูลที่แชร์ไม่สมบูรณ์");
-            }
+            if (!rootOldId || !struct[rootOldId]) return alert("ข้อมูลที่แชร์ไม่สมบูรณ์");
 
-            // สร้างหมวดหมู่หลักใน Account ผู้รับ
             const rootRef = await uRef('categories').push();
             await rootRef.set({ name: struct[rootOldId].name + " (Shared)", parentId: null });
             idMapping[rootOldId] = rootRef.key;
 
-            // 2. สร้างหมวดย่อยชั้นที่ 2
             for (let oldId in struct) {
                 if (oldId !== rootOldId && struct[oldId].parentId === rootOldId) {
                     const childRef = await uRef('categories').push();
@@ -327,7 +320,6 @@
                 }
             }
 
-            // 3. สร้างหมวดย่อยชั้นที่ 3
             for (let oldId in struct) {
                 const pId = struct[oldId].parentId;
                 if (oldId !== rootOldId && pId && pId !== rootOldId && idMapping[pId]) {
@@ -337,7 +329,6 @@
                 }
             }
 
-            // 4. นำเข้าวิดีโอลงในหมวดใหม่ที่ตรงกัน
             for (let v of vids) {
                 await uRef('videos').push({
                     title: v.title || "ไม่มีชื่อ",
@@ -351,12 +342,11 @@
             alert("นำเข้าข้อมูลพร้อมหมวดหมู่ย่อยสำเร็จเรียบร้อย! ✨");
             window.location.href = window.location.origin + window.location.pathname;
         } catch (err) {
-            console.error(err);
             alert("เกิดข้อผิดพลาดในการนำเข้าข้อมูล: " + err.message);
         }
     }
 
-    // --- YOUTUBE SEARCH ENGINE ---
+    // --- YOUTUBE SEARCH ---
     async function searchYT() {
         const q = document.getElementById('qInp').value.trim(); if (!q) return;
         const resArea = document.getElementById('searchRes'); resArea.innerHTML = "🔍 กำลังค้นหา...";
@@ -376,9 +366,7 @@
     }
 
     function openSaveFromSearch(index) {
-        if (Object.keys(myData.categories || {}).length === 0) {
-            return alert("กรุณาสร้างหมวดหมู่อย่างน้อย 1 หมวดก่อนบันทึกคลิปครับ (กดปุ่ม ⚙️)");
-        }
+        if (Object.keys(myData.categories || {}).length === 0) return alert("กรุณาสร้างหมวดหมู่อย่างน้อย 1 หมวดก่อนบันทึกคลิปครับ (กดปุ่ม ⚙️)");
         const item = searchCache[index];
         tmp.vidData = { youtubeId: item.id.videoId, type: 'youtube', title: item.snippet.title };
         document.getElementById('saveMTitle').innerText = "บันทึก: " + item.snippet.title;
@@ -386,28 +374,43 @@
         toggleM('saveModal', 1);
     }
 
-    // --- ADD FROM URL ---
+    // --- URL EXTRACTOR (YouTube, Drive, Facebook, TikTok) ---
     function extractSource(url) {
+        // 1. YouTube
         if (url.includes('youtube.com') || url.includes('youtu.be')) {
             const m = url.match(/^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/);
             return (m && m[2].length === 11) ? { id: m[2], type: 'youtube' } : null;
         }
+        // 2. Google Drive
         if (url.includes('drive.google.com')) {
             const m = url.match(/\/d\/([a-zA-Z0-9_-]+)/) || url.match(/id=([a-zA-Z0-9_-]+)/);
             return m ? { id: m[1], type: 'drive' } : null;
         }
-        if (url.includes('facebook.com') || url.includes('fb.watch')) return { id: url, type: 'facebook' };
+        // 3. TikTok
         if (url.includes('tiktok.com')) {
             const m = url.match(/video\/(\d+)/);
             return { id: m ? m[1] : url, type: 'tiktok' };
+        }
+        // 4. Facebook / FB Reels
+        if (url.includes('facebook.com') || url.includes('fb.watch')) {
+            // ดึง ID ของ Reel ออกมาถ้ามี
+            const reelMatch = url.match(/reel\/(\d+)/);
+            if (reelMatch) return { id: reelMatch[1], type: 'fb_reel' };
+
+            // ดึง ID วิดีโอธรรมดา
+            const vidMatch = url.match(/(?:videos\/|[?&]v=)(\d+)/);
+            if (vidMatch) return { id: vidMatch[1], type: 'facebook' };
+
+            // กรณีเป็นลิงก์ทั่วไป ให้ตัดพารามิเตอร์แปลกปลอม (?mibextid=...) ทิ้ง
+            let cleanUrl = url.split('?')[0].replace('m.facebook.com', 'www.facebook.com');
+            const isReel = url.includes('/reel/') || url.includes('/share/r/');
+            return { id: cleanUrl, type: isReel ? 'fb_reel' : 'facebook' };
         }
         return null;
     }
 
     async function addSource() {
-        if (Object.keys(myData.categories || {}).length === 0) {
-            return alert("กรุณาสร้างหมวดหมู่อย่างน้อย 1 หมวดก่อนบันทึกคลิปครับ (กดปุ่ม ⚙️)");
-        }
+        if (Object.keys(myData.categories || {}).length === 0) return alert("กรุณาสร้างหมวดหมู่อย่างน้อย 1 หมวดก่อนบันทึกคลิปครับ (กดปุ่ม ⚙️)");
         const url = document.getElementById('urlInp').value.trim();
         const manualT = document.getElementById('manualTitle').value.trim();
         const source = extractSource(url);
@@ -421,7 +424,10 @@
                 if (data.items.length > 0) tmp.vidData.title = data.items[0].snippet.title;
             } catch(e) {}
         }
-        if (!tmp.vidData.title) tmp.vidData.title = source.type.toUpperCase() + " Video";
+        if (!tmp.vidData.title) {
+            const typeNames = { youtube: 'YouTube', drive: 'Google Drive', facebook: 'Facebook', fb_reel: 'FB Reel', tiktok: 'TikTok' };
+            tmp.vidData.title = (typeNames[source.type] || 'Video') + ' Post';
+        }
         document.getElementById('saveMTitle').innerText = "บันทึก: " + tmp.vidData.title;
         document.getElementById('saveCatSel').innerHTML = generateHierarchyOptions();
         toggleM('saveModal', 1);
@@ -430,7 +436,7 @@
     function confirmSave() {
         const cId = document.getElementById('saveCatSel').value;
         if (!cId) return alert("กรุณาเลือกหมวดหมู่");
-        if (!tmp.vidData || !tmp.vidData.youtubeId) return alert("ข้อมูลวิดีโอไม่สมบูรณ์ กรุณาลองใหม่อีกครั้ง");
+        if (!tmp.vidData || !tmp.vidData.youtubeId) return alert("ข้อมูลวิดีโอไม่สมบูรณ์");
 
         uRef('videos').push({ ...tmp.vidData, catId: cId, addedAt: Date.now() });
         document.getElementById('urlInp').value = "";
@@ -438,7 +444,7 @@
         toggleM('saveModal', 0);
     }
 
-    // --- CATEGORY & UI LOGIC ---
+    // --- CATEGORY & HIERARCHY ---
     function getCategoryTree() {
         const cats = myData.categories || {};
         const main = [], sub = {}, subSub = {};
@@ -520,13 +526,11 @@
         toggleM('catMModal', 1);
     }
 
-    // Cascade Delete
     async function deleteCat(id) {
         const catName = myData.categories[id] ? myData.categories[id].name : "หมวดหมู่";
-        if (confirm(`⚠️ ยืนยันการลบหมวดหมู่ "${catName}"?\nหมวดย่อยและวิดีโอที่อยู่ข้างในทั้งหมดจะถูกลบทิ้งไปด้วย!`)) {
+        if (confirm(`⚠️ ยืนยันการลบ "${catName}"?\nหมวดย่อยและวิดีโอข้างในจะถูกลบทิ้งทั้งหมด!`)) {
             const cats = myData.categories || {};
             let idsToDelete = [id];
-
             Object.keys(cats).forEach(k => {
                 if (cats[k].parentId === id) {
                     idsToDelete.push(k);
@@ -535,19 +539,15 @@
                     });
                 }
             });
-
             idsToDelete.forEach(cId => uRef(`categories/${cId}`).remove());
-
             const vids = myData.videos || {};
             Object.keys(vids).forEach(vk => {
-                if (idsToDelete.includes(vids[vk].catId)) {
-                    uRef(`videos/${vk}`).remove();
-                }
+                if (idsToDelete.includes(vids[vk].catId)) uRef(`videos/${vk}`).remove();
             });
         }
     }
 
-    // --- RENDER VIDEOS ---
+    // --- RENDER ENGINE (Supports FB Reels & Vertical Mode) ---
     function renderVids() {
         const f = document.getElementById('vFilter').value;
         const sort = document.getElementById('vSort').value;
@@ -580,18 +580,44 @@
             const v = vids[k];
             const isDrive = v.type === 'drive';
             const isTikTok = v.type === 'tiktok';
-            const isFB = v.type === 'facebook';
-            let embed = "";
+            const isFBReel = v.type === 'fb_reel';
+            const isFB = v.type === 'facebook' || isFBReel;
+            const isVertical = isTikTok || isFBReel;
 
-            if (isDrive) embed = `https://drive.google.com/file/d/${v.youtubeId}/preview`;
-            else if (isFB) embed = `https://www.facebook.com/plugins/video.php?href=${encodeURIComponent(v.youtubeId)}&show_text=0`;
-            else if (isTikTok) embed = `https://www.tiktok.com/embed/v2/${v.youtubeId.match(/video\/(\d+)/) ? v.youtubeId.match(/video\/(\d+)/)[1] : v.youtubeId}`;
-            else embed = `https://www.youtube-nocookie.com/embed/${v.youtubeId}?rel=0`;
+            let embed = "";
+            let tagText = (v.type || 'youtube').toUpperCase();
+            let tagColor = "var(--primary)";
+
+            if (isDrive) {
+                embed = `https://drive.google.com/file/d/${v.youtubeId}/preview`;
+                tagColor = "var(--drive)";
+            } else if (isFB) {
+                tagColor = "var(--fb)";
+                tagText = isFBReel ? "FB REEL" : "FACEBOOK";
+                let fbUrl = v.youtubeId;
+                // ถ้าเป็นตัวเลข ID เดี่ยวๆ
+                if (/^\d+$/.test(fbUrl)) {
+                    fbUrl = isFBReel ? `https://www.facebook.com/reel/${fbUrl}/` : `https://www.facebook.com/watch/?v=${fbUrl}`;
+                } else {
+                    // ทำความสะอาด URL ตัดพารามิเตอร์ติดตามทิ้ง
+                    fbUrl = fbUrl.split('?')[0].replace('m.facebook.com', 'www.facebook.com');
+                    if (!fbUrl.endsWith('/')) fbUrl += '/';
+                }
+                embed = `https://www.facebook.com/plugins/video.php?href=${encodeURIComponent(fbUrl)}&show_text=0`;
+            } else if (isTikTok) {
+                const tiktokId = v.youtubeId.match(/video\/(\d+)/) ? v.youtubeId.match(/video\/(\d+)/)[1] : v.youtubeId;
+                embed = `https://www.tiktok.com/embed/v2/${tiktokId}`;
+                tagColor = "var(--tiktok)";
+            } else {
+                embed = `https://www.youtube-nocookie.com/embed/${v.youtubeId}?rel=0`;
+            }
 
             return `<div class="v-card">
-                <div class="v-type-tag" style="background:var(--${v.type || 'primary'})">${(v.type || 'YOUTUBE').toUpperCase()}</div>
+                <div class="v-type-tag" style="background:${tagColor}">${tagText}</div>
                 <div class="v-title">${v.title || 'ไม่มีชื่อบทเรียน'} <br><small style="color:#aaa; font-weight:normal;">📁 ${cats[v.catId] ? cats[v.catId].name : 'ทั่วไป'}</small></div>
-                <div class="v-iframe ${isTikTok ? 'tiktok-mode' : ''}"><iframe src="${embed}" allowfullscreen allow="autoplay; encrypted-media; picture-in-picture;"></iframe></div>
+                <div class="v-iframe ${isVertical ? 'vertical-mode' : ''}">
+                    <iframe src="${embed}" allowfullscreen allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"></iframe>
+                </div>
                 <div class="card-actions">
                     <button class="tool-btn" onclick="tmp.k='${k}'; document.getElementById('moveCatSel').innerHTML=generateHierarchyOptions(); document.getElementById('moveCatSel').value='${v.catId}'; toggleM('moveModal',1)">✎ ย้าย</button>
                     <button class="tool-btn" onclick="tmp.k='${k}'; toggleM('delModal',1)" style="color:var(--danger)">✖ ลบ</button>
@@ -610,7 +636,7 @@
         toggleM(type === 'move' ? 'moveModal' : 'delModal', 0);
     };
 
-    // --- AUDIT TOOL: DUPLICATE SCANNER ---
+    // --- DUPLICATE SCANNER ---
     function scanDuplicates() {
         const vids = myData.videos || {};
         const cats = myData.categories || {};
