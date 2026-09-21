@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>LearnHub | Ultimate Multi-Platform</title>
+    <title>LearnHub | 3-Level Hierarchy</title>
     <link href="https://fonts.googleapis.com/css2?family=Mitr:wght@300;400;500&display=swap" rel="stylesheet">
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
@@ -14,7 +14,7 @@
         body { background: var(--bg); color: var(--text); margin: 0; padding: 10px; min-height: 100vh; }
         .container { max-width: 1100px; margin: auto; }
         button { cursor: pointer; border: none; transition: 0.2s; border-radius: 12px; font-weight: 500; }
-        input, select { width: 100%; padding: 12px; border-radius: 12px; border: 1px solid #e0e0e0; font-size: 16px; outline: none; background: #fff; }
+        input, select, textarea { width: 100%; padding: 12px; border-radius: 12px; border: 1px solid #e0e0e0; font-size: 16px; outline: none; background: #fff; }
         
         .header, .panel, .v-card, .modal-content { background: #fff; box-shadow: var(--shadow); border-radius: 20px; }
         .header { display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; margin-bottom: 15px; }
@@ -23,20 +23,19 @@
         
         .lib-controls { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
         .search-box { position: relative; flex: 1; }
-        .search-box input { padding-left: 40px; border: 2px solid #fff; box-shadow: var(--shadow); }
+        .search-box input { padding-left: 40px; border: 2px solid #fff; }
         .search-box::before { content: '🔍'; position: absolute; left: 15px; top: 12px; font-size: 14px; opacity: 0.5; z-index: 1; }
         
         .sort-filter-group { display: flex; gap: 8px; width: 100%; }
         .v-select-custom { flex: 1; border-radius: 50px; font-weight: bold; color: var(--primary); box-shadow: var(--shadow); border: none; }
 
         .video-grid { display: grid; grid-template-columns: 1fr; gap: 20px; }
-        .v-card { overflow: hidden; transition: 0.3s; border: 1px solid #fff; position: relative; display: flex; flex-direction: column; }
+        .v-card { overflow: hidden; transition: 0.3s; border: 1px solid #fff; position: relative; }
         .v-card:hover { transform: translateY(-5px); }
-        .v-type-tag { position: absolute; top: 50px; right: 10px; color: #fff; font-size: 0.6rem; padding: 2px 8px; border-radius: 10px; z-index: 2; opacity: 0.9; font-weight: bold; }
+        .v-type-tag { position: absolute; top: 48px; right: 10px; color: #fff; font-size: 0.6rem; padding: 2px 8px; border-radius: 10px; z-index: 2; opacity: 0.9; font-weight: bold; }
         .v-title { padding: 12px 15px; background: #fdfdfd; font-size: 0.85rem; color: var(--primary); line-height: 1.4; border-bottom: 1px solid #eee; min-height: 45px; }
         
         .v-iframe { position: relative; padding-top: 56.25%; background: #000; }
-        /* ปรับสัดส่วนสำหรับ TikTok */
         .v-iframe.tiktok-mode { padding-top: 130%; } 
         .v-iframe iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0; }
         
@@ -44,11 +43,11 @@
         .tool-btn { background: #f8f9fb; padding: 8px 15px; font-size: 0.8rem; color: #636e72; border-radius: 10px; }
 
         .modal { display: none; position: fixed; z-index: 999; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); align-items: center; justify-content: center; }
-        .modal-content { background: white; width: 95%; max-width: 420px; max-height: 85vh; display: flex; flex-direction: column; border-radius: 25px; animation: pop .3s; }
+        .modal-content { background: white; width: 95%; max-width: 450px; max-height: 85vh; display: flex; flex-direction: column; animation: pop .3s; border-radius: 25px; }
         @keyframes pop { from { transform: scale(0.95); opacity: 0; } }
         .m-header { padding: 15px 20px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; }
         .m-body { padding: 20px; overflow-y: auto; }
-        .list-item { display: flex; justify-content: space-between; padding: 12px; border-bottom: 1px solid #f8f8f8; align-items: center; }
+        .list-item { display: flex; justify-content: space-between; padding: 12px; border-bottom: 1px solid #f8f8f8; align-items: center; text-align: left; }
 
         #mainApp, #loginPage { display: none; }
         @media (min-width: 768px) { .video-grid { grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); } .lib-controls { flex-direction: row; } .sort-filter-group { width: 60%; } }
@@ -70,11 +69,11 @@
         </div>
 
         <div class="panel source-area">
-            <label style="font-size:0.8rem; color:var(--primary); font-weight:bold;">🔗 เพิ่มบทเรียน (YouTube / Drive / FB / TikTok)</label>
+            <label style="font-size:0.8rem; color:var(--primary); font-weight:bold;">🔗 เพิ่มบทเรียนใหม่</label>
             <div style="display:flex; flex-direction:column; gap:8px; margin-top:8px;">
-                <input type="text" id="urlInp" placeholder="วางลิงก์วิดีโอที่นี่...">
+                <input type="text" id="urlInp" placeholder="ลิงก์วิดีโอ (YouTube / Drive / FB / TikTok)">
                 <div style="display:flex; gap:8px;">
-                    <input type="text" id="manualTitle" placeholder="ตั้งชื่อบทเรียนที่นี่...">
+                    <input type="text" id="manualTitle" placeholder="ชื่อบทเรียน">
                     <button onclick="addSource()" style="background:var(--primary); color:#fff; padding:0 25px; white-space:nowrap;">บันทึก ✨</button>
                 </div>
             </div>
@@ -83,7 +82,7 @@
         <div class="panel" style="background: #f0fdf4; border-left: 5px solid var(--drive);">
             <label style="font-size:0.8rem; color:var(--drive); font-weight:bold;">🔍 ค้นหาใน YouTube</label>
             <div style="display:flex; gap:8px; margin-top:8px;">
-                <input type="text" id="qInp" placeholder="หาอะไรใน YouTube ดี...">
+                <input type="text" id="qInp" placeholder="ค้นหาบทเรียนใหม่ๆ...">
                 <button onclick="searchYT()" style="background:var(--drive); color:#fff; padding:0 25px;">ค้นหา</button>
             </div>
             <div id="searchRes" style="display:flex; overflow-x:auto; gap:12px; padding-top:10px; scrollbar-width:none;"></div>
@@ -123,15 +122,17 @@
     <div id="catMList"></div>
 </div></div></div>
 
-<div id="dupeModal" class="modal"><div class="modal-content"><div class="m-header"><h3>ข้อมูลซ้ำ ⚠️</h3><span onclick="toggleM('dupeModal',0)" style="font-size:24px; cursor:pointer;">&times;</span></div><div class="m-body" id="dupeList"></div></div></div>
-
-<div id="saveModal" class="modal"><div class="modal-content"><div class="m-header"><h3 id="saveMTitle" style="font-size:0.9rem;">บันทึกวิดีโอ</h3><span onclick="toggleM('saveModal',0)">&times;</span></div><div class="m-body">
-    <select id="saveCatSel" style="margin-bottom:15px; border:2px solid var(--primary);"></select>
-    <button onclick="confirmSave()" style="background:var(--primary); color:#fff; width:100%; padding:15px;">บันทึกเข้าคลัง ✨</button>
+<div id="catEditModal" class="modal"><div class="modal-content"><div class="m-header"><h3>แก้ไขหมวดหมู่</h3><span onclick="toggleM('catEditModal',0)">&times;</span></div><div class="m-body">
+    <label style="font-size:0.8rem;">ชื่อหมวด:</label>
+    <input type="text" id="editCatInp" style="margin-bottom:15px;">
+    <label style="font-size:0.8rem;">ย้ายไปภายใต้:</label>
+    <select id="editCatPSel" style="margin-bottom:20px;"></select>
+    <button onclick="saveCatEdit()" style="background:var(--primary); color:#fff; width:100%; padding:15px;">บันทึกการเปลี่ยนแปลง</button>
 </div></div></div>
 
-<div id="moveModal" class="modal"><div class="modal-content"><div class="m-header"><h3>ย้ายหมวดหมู่</h3><span onclick="toggleM('moveModal',0)">&times;</span></div><div class="m-body"><select id="moveCatSel"></select><button onclick="actVid('move')" style="background:var(--primary); color:#fff; width:100%; margin-top:20px; padding:12px;">ย้ายทันที</button></div></div></div>
-
+<div id="dupeModal" class="modal"><div class="modal-content"><div class="m-header"><h3>ข้อมูลซ้ำ ⚠️</h3><span onclick="toggleM('dupeModal',0)">&times;</span></div><div class="m-body" id="dupeList"></div></div></div>
+<div id="saveModal" class="modal"><div class="modal-content"><div class="m-header"><h3 id="saveMTitle" style="font-size:0.9rem;">บันทึกวิดีโอ</h3><span onclick="toggleM('saveModal',0)">&times;</span></div><div class="m-body"><select id="saveCatSel" style="margin-bottom:15px;"></select><button onclick="confirmSave()" style="background:var(--primary); color:#fff; width:100%; padding:15px;">บันทึก ✨</button></div></div></div>
+<div id="moveModal" class="modal"><div class="modal-content"><div class="m-header"><h3>ย้ายหมวดหมู่</h3><span onclick="toggleM('moveModal',0)">&times;</span></div><div class="m-body"><select id="moveCatSel" style="margin-bottom:15px;"></select><button onclick="actVid('move')" style="background:var(--primary); color:#fff; width:100%; padding:12px;">ย้ายทันที</button></div></div></div>
 <div id="delModal" class="modal"><div class="modal-content"><div class="m-body" style="text-align:center;"><h2 style="color:var(--danger)">ลบวิดีโอ?</h2><button onclick="actVid('del')" style="background:var(--danger); color:#fff; width:100%; padding:12px;">ยืนยันการลบ</button><button onclick="toggleM('delModal',0)" style="background:none; color:#aaa; margin-top:10px;">ยกเลิก</button></div></div></div>
 
 <script>
@@ -152,27 +153,100 @@
     const toggleM = (id, show) => document.getElementById(id).style.display = show ? 'flex' : 'none';
     const uRef = (path) => db.ref(`users/${user.uid}/${path}`);
 
-    // --- TikTok Helper ---
-    function getTikTokId(url) {
-        const regex = /video\/(\d+)/;
-        const match = url.match(regex);
-        return match ? match[1] : null;
+    // --- Category Logic (Support 3 Levels) ---
+    function getCategoryTree() {
+        const cats = myData.categories || {};
+        const main = [], sub = {}, subSub = {};
+        
+        Object.keys(cats).forEach(id => {
+            const cat = { id, ...cats[id] };
+            if (!cat.parentId) main.push(cat);
+            else if (cats[cat.parentId] && !cats[cat.parentId].parentId) {
+                if (!sub[cat.parentId]) sub[cat.parentId] = [];
+                sub[cat.parentId].push(cat);
+            } else {
+                if (!subSub[cat.parentId]) subSub[cat.parentId] = [];
+                subSub[cat.parentId].push(cat);
+            }
+        });
+        return { main, sub, subSub };
     }
 
-    // --- Data Extraction (Extended for TikTok) ---
-    function extractSource(url) {
-        if (url.includes('youtube.com') || url.includes('youtu.be')) {
-            const m = url.match(/^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/);
-            return (m && m[2].length === 11) ? { id: m[2], type: 'youtube' } : null;
-        } else if (url.includes('drive.google.com')) {
-            const m = url.match(/\/d\/(.+?)\/(view|edit|preview)/) || url.match(/id=(.+?)(&|$)/);
-            return (m && m[1]) ? { id: m[1], type: 'drive' } : null;
-        } else if (url.includes('facebook.com') || url.includes('fb.watch')) {
-            return { id: url, type: 'facebook' };
-        } else if (url.includes('tiktok.com')) {
-            const id = getTikTokId(url);
-            return id ? { id: id, type: 'tiktok' } : { id: url, type: 'tiktok' }; // Fallback to URL if ID extraction fails
+    function createCategory() {
+        const n = document.getElementById('newCatInp').value.trim();
+        const p = document.getElementById('newCatParentSel').value;
+        if (n) {
+            uRef('categories').push({ name: n, parentId: p === 'none' ? null : p });
+            document.getElementById('newCatInp').value = "";
         }
+    }
+
+    function saveCatEdit() {
+        const n = document.getElementById('editCatInp').value.trim(), p = document.getElementById('editCatPSel').value;
+        if (n) {
+            uRef(`categories/${tmp.editingCatId}`).update({ name: n, parentId: p === 'none' ? null : p });
+            toggleM('catEditModal', 0); toggleM('catMModal', 1);
+        }
+    }
+
+    function updateUI() {
+        const { main, sub, subSub } = getCategoryTree();
+        const filterVal = document.getElementById('vFilter').value || 'all';
+        
+        // 1. Generate Dropdowns (3 Levels)
+        let html = '';
+        main.forEach(m => {
+            html += `<option value="${m.id}">${m.name}</option>`;
+            if (sub[m.id]) sub[m.id].forEach(s => {
+                html += `<option value="${s.id}">&nbsp;&nbsp;└ ${s.name}</option>`;
+                if (subSub[s.id]) subSub[s.id].forEach(ss => {
+                    html += `<option value="${ss.id}">&nbsp;&nbsp;&nbsp;&nbsp;└─ ${ss.name}</option>`;
+                });
+            });
+        });
+
+        document.getElementById('vFilter').innerHTML = '<option value="all">💎 คลังทั้งหมด</option>' + html;
+        document.getElementById('saveCatSel').innerHTML = document.getElementById('moveCatSel').innerHTML = html;
+        document.getElementById('vFilter').value = filterVal;
+
+        // 2. Parent Selections (Limit to Level 1 & 2 only as parents)
+        let pHTML = '<option value="none">-- เป็นหมวดหลัก --</option>';
+        main.forEach(m => {
+            pHTML += `<option value="${m.id}">${m.name}</option>`;
+            if (sub[m.id]) sub[m.id].forEach(s => {
+                pHTML += `<option value="${s.id}">└ ${s.name}</option>`;
+            });
+        });
+        document.getElementById('newCatParentSel').innerHTML = document.getElementById('editCatPSel').innerHTML = pHTML;
+
+        // 3. Manager List (3 Levels)
+        let listHTML = '';
+        main.forEach(m => {
+            listHTML += `<div class="list-item"><span><b>• ${m.name}</b></span><div><button onclick="tmp.editingCatId='${m.id}'; openEditCat('${m.id}')">✎</button><button onclick="uRef('categories/${m.id}').remove()" style="color:red">🗑️</button></div></div>`;
+            if (sub[m.id]) sub[m.id].forEach(s => {
+                listHTML += `<div class="list-item"><span>&nbsp;&nbsp;&nbsp;└ ${s.name}</span><div><button onclick="tmp.editingCatId='${s.id}'; openEditCat('${s.id}')">✎</button><button onclick="uRef('categories/${s.id}').remove()" style="color:red">🗑️</button></div></div>`;
+                if (subSub[s.id]) subSub[s.id].forEach(ss => {
+                    listHTML += `<div class="list-item"><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└─ ${ss.name}</span><div><button onclick="tmp.editingCatId='${ss.id}'; openEditCat('${ss.id}')">✎</button><button onclick="uRef('categories/${ss.id}').remove()" style="color:red">🗑️</button></div></div>`;
+                });
+            });
+        });
+        document.getElementById('catMList').innerHTML = listHTML || "ไม่มีหมวดหมู่";
+        renderVids();
+    }
+
+    function openEditCat(id) {
+        document.getElementById('editCatInp').value = myData.categories[id].name;
+        document.getElementById('editCatPSel').value = myData.categories[id].parentId || "none";
+        toggleM('catMModal', 0); toggleM('catEditModal', 1);
+    }
+
+    // --- Video Logic ---
+    function getTikTokId(url) { const m = url.match(/video\/(\d+)/); return m ? m[1] : url; }
+    function extractSource(url) {
+        if (url.includes('youtube.com') || url.includes('youtu.be')) { const m = url.match(/^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/); return (m && m[2].length === 11) ? { id: m[2], type: 'youtube' } : null; }
+        if (url.includes('drive.google.com')) { const m = url.match(/\/d\/(.+?)\/(view|edit|preview)/) || url.match(/id=(.+?)(&|$)/); return (m && m[1]) ? { id: m[1], type: 'drive' } : null; }
+        if (url.includes('facebook.com') || url.includes('fb.watch')) return { id: url, type: 'facebook' };
+        if (url.includes('tiktok.com')) return { id: getTikTokId(url), type: 'tiktok' };
         return null;
     }
 
@@ -184,31 +258,57 @@
             try { const res = await fetch(`https://www.googleapis.com/youtube/v3/videos?part=snippet&id=${source.id}&key=${YT_KEY}`); const data = await res.json(); if (data.items.length > 0) tmp.vidData.title = data.items[0].snippet.title; } catch(e) {}
         }
         if (!tmp.vidData.title) tmp.vidData.title = source.type.toUpperCase() + " Video";
-        document.getElementById('saveMTitle').innerText = "บันทึก: " + tmp.vidData.title;
-        document.getElementById('saveCatSel').innerHTML = generateHierarchyOptions();
         toggleM('saveModal', 1);
     }
 
-    function confirmSave() { uRef('videos').push({ ...tmp.vidData, catId: document.getElementById('saveCatSel').value, addedAt: Date.now() }); document.getElementById('urlInp').value = ""; document.getElementById('manualTitle').value = ""; toggleM('saveModal', 0); }
-
-    // --- Search, UI, Duplicates (Remained) ---
     async function searchYT() {
         const q = document.getElementById('qInp').value.trim(); if (!q) return;
         document.getElementById('searchRes').innerHTML = "🔍 ค้นหา...";
         const res = await fetch(`https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=10&q=${encodeURIComponent(q)}&type=video&key=${YT_KEY}`);
         const data = await res.json();
-        document.getElementById('searchRes').innerHTML = (data.items || []).map(i => `
-            <div style="min-width:150px; background:#fff; padding:10px; border-radius:15px; box-shadow:0 4px 10px rgba(0,0,0,0.05); text-align:center;">
-                <img src="${i.snippet.thumbnails.medium.url}" style="width:100%; border-radius:10px;">
-                <p style="font-size:0.6rem; height:25px; overflow:hidden; margin:5px 0;">${i.snippet.title}</p>
-                <button onclick="tmp.vidData={youtubeId:'${i.id.videoId}',type:'youtube',title:'${i.snippet.title.replace(/'/g,"")}'}; toggleM('saveModal',1);" style="background:var(--primary); color:#fff; width:100%; font-size:0.7rem; padding:6px;">บันทึก</button>
-            </div>
-        `).join('');
+        document.getElementById('searchRes').innerHTML = (data.items || []).map(i => `<div style="min-width:140px; background:#fff; padding:10px; border-radius:15px; box-shadow:0 4px 10px rgba(0,0,0,0.05); text-align:center;"><img src="${i.snippet.thumbnails.medium.url}" style="width:100%; border-radius:10px;"><p style="font-size:0.6rem; height:25px; overflow:hidden; margin:5px 0;">${i.snippet.title}</p><button onclick="tmp.vidData={youtubeId:'${i.id.videoId}',type:'youtube',title:'${i.snippet.title.replace(/'/g,"")}'}; toggleM('saveModal',1);" style="background:var(--primary); color:#fff; width:100%; font-size:0.7rem; padding:6px;">บันทึก</button></div>`).join('');
+    }
+
+    function confirmSave() { uRef('videos').push({ ...tmp.vidData, catId: document.getElementById('saveCatSel').value, addedAt: Date.now() }); document.getElementById('urlInp').value = ""; toggleM('saveModal', 0); }
+
+    function renderVids() {
+        const filter = document.getElementById('vFilter').value, sort = document.getElementById('vSort').value, search = document.getElementById('libSearch').value.toLowerCase(), vids = myData.videos || {}, cats = myData.categories || {};
+        
+        // Find all sub-ids recursively for filtering
+        let allowed = [filter];
+        if (filter !== 'all') {
+            Object.keys(cats).forEach(k => { 
+                if(cats[k].parentId === filter) {
+                    allowed.push(k);
+                    // Check for one more level (Level 3)
+                    Object.keys(cats).forEach(k2 => { if(cats[k2].parentId === k) allowed.push(k2); });
+                }
+            });
+        }
+
+        let keys = Object.keys(vids).filter(k => { const v = vids[k]; return (filter === 'all' || allowed.includes(v.catId)) && (!search || v.title.toLowerCase().includes(search)); });
+        keys.sort((a,b) => {
+            const vidA = vids[a], vidB = vids[b];
+            if(sort==='newest') return (vidB.addedAt||0) - (vidA.addedAt||0);
+            if(sort==='oldest') return (vidA.addedAt||0) - (vidB.addedAt||0);
+            return vidA.title.localeCompare(vidB.title, 'th');
+        });
+
+        document.getElementById('vDisp').innerHTML = keys.map(k => {
+            const v = vids[k], isDrive = v.type === 'drive', isTikTok = v.type === 'tiktok', isFB = v.type === 'facebook';
+            let embed = "";
+            if(isDrive) embed = `https://drive.google.com/file/d/${v.youtubeId}/preview`;
+            else if(isFB) embed = `https://www.facebook.com/plugins/video.php?href=${encodeURIComponent(v.youtubeId)}&show_text=0`;
+            else if(isTikTok) embed = `https://www.tiktok.com/embed/v2/${v.youtubeId.includes('http') ? getTikTokId(v.youtubeId) : v.youtubeId}`;
+            else embed = `https://www.youtube-nocookie.com/embed/${v.youtubeId}?rel=0`;
+
+            return `<div class="v-card"><div class="v-type-tag" style="background:var(--${v.type||'primary'})">${(v.type||'YOUTUBE').toUpperCase()}</div><div class="v-title">${v.title} <br><small style="color:#aaa; font-weight:normal;">📁 ${cats[v.catId]?cats[v.catId].name:'ทั่วไป'}</small></div><div class="v-iframe ${isTikTok?'tiktok-mode':''}"><iframe src="${embed}" allowfullscreen allow="autoplay; encrypted-media; picture-in-picture;"></iframe></div><div class="card-actions"><button class="tool-btn" onclick="tmp.k='${k}'; document.getElementById('moveCatSel').value='${v.catId}'; toggleM('moveModal',1)">✎ ย้าย</button><button class="tool-btn" onclick="tmp.k='${k}'; toggleM('delModal',1)" style="color:var(--danger)">✖ ลบ</button></div></div>`;
+        }).join('') || '<p style="grid-column:1/-1; text-align:center; padding:50px; color:#aaa;">ไม่พบข้อมูล ✨</p>';
     }
 
     function scanDuplicates() {
         const vids = myData.videos || {}, cats = myData.categories || {}, groups = {};
-        Object.keys(vids).forEach(k => { const v = vids[k]; if(!groups[v.youtubeId]) groups[v.youtubeId] = []; groups[v.youtubeId].push({key: k, ...v}); });
+        Object.keys(vids).forEach(k => { const id = vids[k].youtubeId; if(!groups[id]) groups[id] = []; groups[id].push({key: k, ...vids[k]}); });
         const dupes = Object.values(groups).filter(g => g.length > 1);
         const list = document.getElementById('dupeList'); list.innerHTML = dupes.length === 0 ? "<p>ไม่พบข้อมูลซ้ำ</p>" : "";
         dupes.forEach(g => {
@@ -218,63 +318,8 @@
         });
         toggleM('catMModal', 0); toggleM('dupeModal', 1);
     }
-
-    function createCategory() {
-        const n = document.getElementById('newCatInp').value.trim(), p = document.getElementById('newCatParentSel').value;
-        if (n) { uRef('categories').push({ name: n, parentId: p === 'none' ? null : p }); document.getElementById('newCatInp').value = ""; }
-    }
-
-    function generateHierarchyOptions() {
-        const cats = myData.categories || {}; const main = []; const sub = {};
-        Object.keys(cats).forEach(k => { if(!cats[k].parentId) main.push({k, ...cats[k]}); else (sub[cats[k].parentId] = sub[cats[k].parentId] || []).push({k, ...cats[k]}); });
-        let h = ""; main.forEach(m => { h += `<option value="${m.k}">${m.name}</option>`; if (sub[m.k]) sub[m.k].forEach(s => h += `<option value="${s.k}">└ ${s.name}</option>`); });
-        return h;
-    }
-
-    function updateUI() {
-        const cats = myData.categories || {}, filterVal = document.getElementById('vFilter').value || 'all', h = generateHierarchyOptions();
-        document.getElementById('vFilter').innerHTML = '<option value="all">💎 คลังทั้งหมด</option>' + h;
-        document.getElementById('vFilter').value = filterVal;
-        document.getElementById('newCatParentSel').innerHTML = '<option value="none">-- เป็นหมวดหลัก --</option>' + Object.keys(cats).filter(k => !cats[k].parentId).map(k => `<option value="${k}">${cats[k].name}</option>`).join('');
-        const main = [], sub = {};
-        Object.keys(cats).forEach(k => { if(!cats[k].parentId) main.push({k, ...cats[k]}); else (sub[cats[k].parentId] = sub[cats[k].parentId] || []).push({k, ...cats[k]}); });
-        document.getElementById('catMList').innerHTML = main.map(m => `<div class="list-item"><span><b>•</b> ${m.name}</span><button onclick="uRef('categories/${m.k}').remove()" style="color:var(--danger); background:none; font-size:1.2rem;">🗑️</button></div>` + (sub[m.k]||[]).map(s => `<div class="list-item"><span>&nbsp;&nbsp;&nbsp;└ ${s.name}</span><button onclick="uRef('categories/${s.k}').remove()" style="color:var(--danger); background:none; font-size:1.2rem;">🗑️</button></div>`).join('')).join('') || "ไม่มีหมวดหมู่";
-        renderVids();
-    }
-
-    function renderVids() {
-        const filter = document.getElementById('vFilter').value, sort = document.getElementById('vSort').value, search = document.getElementById('libSearch').value.toLowerCase(), vids = myData.videos || {}, cats = myData.categories || {};
-        let allowed = [filter]; if (filter !== 'all') Object.keys(cats).forEach(k => { if(cats[k].parentId === filter) allowed.push(k); });
-        let keys = Object.keys(vids).filter(k => { const v = vids[k]; return (filter === 'all' || allowed.includes(v.catId)) && (!search || v.title.toLowerCase().includes(search)); });
-        keys.sort((a,b) => {
-            if(sort==='newest') return vids[b].addedAt - vids[a].addedAt;
-            if(sort==='oldest') return vids[a].addedAt - vids[b].addedAt;
-            return sort==='az' ? vids[a].title.localeCompare(vids[b].title, 'th') : vids[b].title.localeCompare(vids[a].title, 'th');
-        });
-        document.getElementById('vDisp').innerHTML = keys.map(k => {
-            const v = vids[k];
-            let embed = "", tagColor = "var(--primary)", isTikTok = v.type === 'tiktok';
-            
-            if (v.type === 'drive') { embed = `https://drive.google.com/file/d/${v.youtubeId}/preview`; tagColor = "var(--drive)"; }
-            else if (v.type === 'facebook') { embed = `https://www.facebook.com/plugins/video.php?href=${encodeURIComponent(v.youtubeId)}&show_text=0`; tagColor = "var(--fb)"; }
-            else if (v.type === 'tiktok') { 
-                const tiktokId = v.youtubeId.includes('http') ? getTikTokId(v.youtubeId) : v.youtubeId;
-                embed = `https://www.tiktok.com/embed/v2/${tiktokId}`; tagColor = "var(--tiktok)"; 
-            }
-            else { embed = `https://www.youtube-nocookie.com/embed/${v.youtubeId}?rel=0`; tagColor = "var(--primary)"; }
-
-            return `<div class="v-card">
-                <div class="v-type-tag" style="background:${tagColor}">${(v.type||'YOUTUBE').toUpperCase()}</div>
-                <div class="v-title">${v.title} <br><small style="color:#aaa; font-weight:normal;">📁 ${cats[v.catId]?cats[v.catId].name:'ทั่วไป'}</small></div>
-                <div class="v-iframe ${isTikTok ? 'tiktok-mode' : ''}"><iframe src="${embed}" allowfullscreen allow="autoplay; encrypted-media; picture-in-picture;"></iframe></div>
-                <div class="card-actions">
-                    <button class="tool-btn" onclick="tmp.k='${k}'; document.getElementById('moveCatSel').innerHTML=generateHierarchyOptions(); document.getElementById('moveCatSel').value='${v.catId}'; toggleM('moveModal',1)">✎ ย้าย</button>
-                    <button class="tool-btn" onclick="tmp.k='${k}'; toggleM('delModal',1)" style="color:var(--danger)">✖ ลบ</button>
-                </div>
-            </div>`;
-        }).join('') || '<p style="grid-column:1/-1; text-align:center; padding:50px; color:#aaa;">ไม่พบข้อมูล ✨</p>';
-    }
     const actVid = (type) => { if(type==='move') uRef(`videos/${tmp.k}`).update({catId:document.getElementById('moveCatSel').value}); else uRef(`videos/${tmp.k}`).remove(); toggleM(type==='move'?'moveModal':'delModal', 0); };
+    function closeModalOnOutside(event, id) { if(event.target.className === 'modal') toggleM(id, 0); }
 </script>
 </body>
 </html>
