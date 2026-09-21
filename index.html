@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>LearnHub | Personal Learning Hub</title>
+    <title>LearnHub | Fix Display</title>
     <link href="https://fonts.googleapis.com/css2?family=Mitr:wght@300;400;500&display=swap" rel="stylesheet">
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
@@ -15,23 +15,20 @@
         .container { max-width: 1100px; margin: auto; }
         button { cursor: pointer; border: none; transition: 0.2s; border-radius: 12px; font-weight: 500; }
         input, select { width: 100%; padding: 12px; border-radius: 12px; border: 1px solid #e0e0e0; font-size: 16px; outline: none; background: #fff; }
-        input:focus { border-color: var(--primary); }
-
+        
         .header, .panel, .v-card, .modal-content { background: #fff; box-shadow: var(--shadow); border-radius: 20px; }
         .header { display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; margin-bottom: 15px; }
         .panel { padding: 15px; margin-bottom: 15px; border-radius: 25px; }
         .search-area { background: #eff2ff; border-left: 5px solid var(--primary); }
         
-        /* Filter & Search Bar Section */
-        .library-controls { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
-        .search-saved-box { position: relative; flex: 1; }
-        .search-saved-box input { padding-left: 40px; background: #fff; border: 2px solid #fff; box-shadow: var(--shadow); }
-        .search-saved-box::before { content: '🔍'; position: absolute; left: 15px; top: 12px; font-size: 14px; opacity: 0.5; }
+        .lib-controls { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+        .search-box { position: relative; flex: 1; }
+        .search-box input { padding-left: 40px; }
+        .search-box::before { content: '🔍'; position: absolute; left: 15px; top: 12px; font-size: 14px; opacity: 0.5; }
 
         .video-grid { display: grid; grid-template-columns: 1fr; gap: 15px; }
         .v-card { overflow: hidden; transition: 0.3s; border: 1px solid #fff; }
-        .v-card:hover { transform: translateY(-5px); }
-        .v-title { padding: 12px 15px; background: #fdfdfd; font-size: 0.85rem; color: var(--primary); line-height: 1.4; border-bottom: 1px solid #eee; }
+        .v-title { padding: 12px 15px; background: #fdfdfd; font-size: 0.85rem; color: var(--primary); line-height: 1.4; border-bottom: 1px solid #eee; min-height: 45px; }
         .v-iframe { position: relative; padding-top: 56.25%; background: #000; }
         .v-iframe iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0; }
         .card-actions { display: flex; justify-content: space-around; padding: 12px; }
@@ -42,69 +39,62 @@
         @keyframes pop { from { transform: scale(0.95); opacity: 0; } }
         .m-header { padding: 15px 20px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; }
         .m-body { padding: 20px; overflow-y: auto; }
-        
-        .cat-item { display: flex; justify-content: space-between; padding: 10px; border-bottom: 1px solid #f8f8f8; }
+        .cat-item { display: flex; justify-content: space-between; padding: 12px; border-bottom: 1px solid #f8f8f8; align-items: center; }
 
         #mainApp, #loginPage, #importBar { display: none; }
-        @media (min-width: 768px) { 
-            .video-grid { grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); } 
-            .input-group { display: flex; gap: 10px; }
-            .library-controls { flex-direction: row; align-items: center; }
-        }
+        @media (min-width: 768px) { .video-grid { grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); } .lib-controls { flex-direction: row; } }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <!-- Share Import Bar -->
+    <!-- Import Alert -->
     <div id="importBar" class="panel" style="background:var(--success); color:#fff; text-align:center;">
-        <span id="importText">พบลิสต์แชร์ ✨</span>
-        <button onclick="importData()" style="background:#fff; color:var(--success); padding:5px 15px; margin-left:10px;">นำเข้าคลัง</button>
+        <span id="importText">พบข้อมูลแชร์ ✨</span>
+        <button onclick="importData()" style="background:#fff; color:var(--success); padding:5px 15px; margin-left:10px;">นำเข้า</button>
     </div>
 
-    <!-- Login Page -->
+    <!-- Login -->
     <div id="loginPage" style="text-align:center; margin-top:15vh;">
         <h1 style="color:var(--primary); font-size:3rem; margin:0;">🎓 LearnHub</h1>
-        <p style="color:#636e72;">“Your personal learning hub.”</p><br>
-        <button onclick="auth.signInWithRedirect(new firebase.auth.GoogleAuthProvider())" style="background:linear-gradient(135deg, var(--primary), var(--secondary)); color:#fff; padding:16px 45px; border-radius:50px; font-size:1.1rem; box-shadow: 0 10px 20px rgba(72,52,212,0.2);">Start with Google</button>
+        <p>“Your personal learning hub.”</p><br>
+        <button onclick="auth.signInWithRedirect(new firebase.auth.GoogleAuthProvider())" style="background:linear-gradient(135deg, var(--primary), var(--secondary)); color:#fff; padding:16px 45px; border-radius:50px; font-size:1.1rem;">Start with Google</button>
     </div>
 
-    <!-- Main App -->
+    <!-- App -->
     <div id="mainApp">
         <div class="header">
-            <div style="display:flex; align-items:center; gap:8px;"><img id="userImg" src="" style="width:32px; border-radius:50%; border:2px solid var(--accent);"><span id="userName" style="font-weight:500;"></span></div>
-            <button onclick="auth.signOut().then(()=>location.reload())" style="background:none; color:#aaa; font-size:0.8rem;">Logout</button>
+            <div style="display:flex; align-items:center; gap:8px;"><img id="userImg" src="" style="width:32px; border-radius:50%;"><span id="userName" style="font-weight:500;"></span></div>
+            <button onclick="auth.signOut().then(()=>location.reload())" style="background:none; color:#aaa;">Logout</button>
         </div>
 
-        <!-- Add Category -->
         <div class="panel">
-            <label style="font-size:0.8rem; color:var(--primary); font-weight:bold;">📚 จัดการหมวดหมู่</label>
-            <div class="input-group" style="margin-top:8px;">
-                <select id="pCatSel" style="flex:1;"><option value="none">-- เป็นหมวดหลัก --</option></select>
-                <input type="text" id="catInp" placeholder="ชื่อหมวดหมู่ใหม่..." style="flex:1.5;">
-                <button onclick="actCat('add')" style="background:var(--primary); color:#fff; padding:12px 25px;">สร้าง</button>
+            <label style="font-size:0.8rem; color:var(--primary); font-weight:bold;">📚 สร้างหมวดหมู่</label>
+            <div style="display:flex; flex-direction:column; gap:8px; margin-top:8px;">
+                <select id="pCatSel"><option value="none">-- เป็นหมวดหลัก --</option></select>
+                <div style="display:flex; gap:8px;">
+                    <input type="text" id="catInp" placeholder="ชื่อหมวดหมู่ใหม่...">
+                    <button onclick="actCat('add')" style="background:var(--primary); color:#fff; padding:0 20px;">สร้าง</button>
+                </div>
             </div>
         </div>
 
-        <!-- YouTube Search -->
         <div class="panel search-area">
-            <label style="font-size:0.8rem; color:var(--primary); font-weight:bold;">🔍 ค้นหาความรู้ใหม่ (YouTube)</label>
-            <div class="input-group" style="margin-top:8px;">
-                <input type="text" id="qInp" placeholder="พิมพ์บทเรียนที่อยากค้นหา...">
-                <button onclick="searchYT()" style="background:var(--accent); color:#fff; padding:12px 25px;">ค้นหา</button>
+            <label style="font-size:0.8rem; color:var(--primary); font-weight:bold;">🔍 ค้นหาความรู้ใหม่</label>
+            <div style="display:flex; gap:8px; margin-top:8px;">
+                <input type="text" id="qInp" placeholder="พิมพ์สิ่งที่อยากเรียนรู้...">
+                <button onclick="searchYT()" style="background:var(--accent); color:#fff; padding:0 25px;">ค้นหา</button>
             </div>
-            <div id="searchRes" style="display:flex; overflow-x:auto; gap:12px; padding-top:10px; scrollbar-width: none;"></div>
+            <div id="searchRes" style="display:flex; overflow-x:auto; gap:12px; padding-top:10px; scrollbar-width:none;"></div>
         </div>
 
-        <!-- Library Controls (Filter + Search Saved) -->
-        <div class="library-controls">
+        <div class="lib-controls">
             <div style="display:flex; gap:8px; flex:1;">
-                <select id="vFilter" onchange="renderVids()" style="border-radius:50px; font-weight:bold; color:var(--primary); box-shadow: var(--shadow); border:none;"></select>
+                <select id="vFilter" onchange="renderVids()" style="border-radius:50px; font-weight:bold; color:var(--primary);"></select>
                 <button onclick="toggleM('catMModal',1)" style="background:var(--primary); color:#fff; width:48px; height:48px; flex-shrink:0;">⚙️</button>
             </div>
-            
-            <div class="search-saved-box">
-                <input type="text" id="savedSearchInp" oninput="renderVids()" placeholder="ค้นหาชื่อคลิปในคลัง...">
+            <div class="search-box">
+                <input type="text" id="saveSearch" oninput="renderVids()" placeholder="ค้นหาคลิปในคลัง...">
             </div>
         </div>
 
@@ -120,8 +110,8 @@
 <div id="catMModal" class="modal"><div class="modal-content"><div class="m-header"><h3>จัดการหมวดหมู่</h3><span onclick="toggleM('catMModal',0)" style="font-size:24px; cursor:pointer;">&times;</span></div><div class="m-body" id="catMList"></div></div></div>
 <div id="saveModal" class="modal"><div class="modal-content"><div class="m-header"><h3 id="saveMTitle" style="font-size:0.9rem;">บันทึก</h3></div><div class="m-body"><select id="saveCatSel"></select><button onclick="saveVid()" style="background:var(--primary); color:#fff; width:100%; margin-top:15px; padding:12px;">บันทึก ✨</button></div></div></div>
 <div id="editModal" class="modal"><div class="modal-content"><div class="m-header"><h3>ย้ายหมวดหมู่</h3></div><div class="m-body"><select id="editCatSel"></select><button onclick="actVid('move')" style="background:var(--primary); color:#fff; width:100%; margin-top:15px; padding:12px;">ย้ายเดี๋ยวนี้</button></div></div></div>
-<div id="delModal" class="modal"><div class="modal-content"><div class="m-body" style="text-align:center;"><h2 style="color:var(--danger)">ลบวิดีโอ?</h2><p>วิดีโอนี้จะหายไปจากคลังของคุณ</p><button onclick="actVid('del')" style="background:var(--danger); color:#fff; width:100%; padding:12px;">ยืนยันการลบ</button><button onclick="toggleM('delModal',0)" style="background:none; color:#aaa; margin-top:10px;">ยกเลิก</button></div></div></div>
-<div id="shareModal" class="modal"><div class="modal-content"><div class="m-header"><h3>แชร์ความรู้ 🔗</h3></div><div class="m-body"><textarea id="sNote" placeholder="ฝากข้อความถึงเพื่อน..." style="width:100%; height:80px; padding:12px; border-radius:15px; border:1px solid #ddd;"></textarea><button onclick="doShare()" style="background:var(--accent); color:#fff; width:100%; margin-top:15px; padding:12px;">คัดลอกลิงก์แชร์</button></div></div></div>
+<div id="delModal" class="modal"><div class="modal-content"><div class="m-body" style="text-align:center;"><h2 style="color:var(--danger)">ลบวิดีโอ?</h2><button onclick="actVid('del')" style="background:var(--danger); color:#fff; width:100%; padding:12px;">ยืนยันการลบ</button><button onclick="toggleM('delModal',0)" style="background:none; color:#aaa; margin-top:10px;">ยกเลิก</button></div></div></div>
+<div id="shareModal" class="modal"><div class="modal-content"><div class="m-header"><h3>แชร์ความรู้ 🔗</h3></div><div class="m-body"><textarea id="sNote" placeholder="ฝากข้อความถึงเพื่อน..." style="width:100%; height:80px; padding:10px; border-radius:12px; border:1px solid #ddd;"></textarea><button onclick="doShare()" style="background:var(--accent); color:#fff; width:100%; margin-top:15px; padding:12px;">คัดลอกลิงก์แชร์</button></div></div></div>
 
 <script>
     const YT_KEY = "AIzaSyBVsxZxnjoMEE6uCk3qaAoenOLEdbgg3U4";
@@ -135,7 +125,7 @@
             user = u; document.getElementById('loginPage').style.display = 'none'; document.getElementById('mainApp').style.display = 'block';
             document.getElementById('userName').innerText = u.displayName; document.getElementById('userImg').src = u.photoURL;
             db.ref('users/'+u.uid).on('value', s => { myData = s.val() || {categories:{}, videos:{}}; updateUI(); });
-        } else { document.getElementById('loginPage').style.display = 'block'; document.getElementById('mainApp').style.display = 'none'; }
+        } else { document.getElementById('loginPage').style.display = 'block'; }
     });
 
     const toggleM = (id, show) => document.getElementById(id).style.display = show ? 'flex' : 'none';
@@ -153,8 +143,8 @@
         const q = document.getElementById('qInp').value; if (!q) return;
         const res = await fetch(`https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=10&q=${encodeURIComponent(q)}&type=video&key=${YT_KEY}`);
         const data = await res.json();
-        document.getElementById('searchRes').innerHTML = data.items.map(i => `
-            <div style="min-width:150px; text-align:center; background:#fff; padding:10px; border-radius:15px; box-shadow:0 4px 10px rgba(0,0,0,0.05);">
+        document.getElementById('searchRes').innerHTML = (data.items || []).map(i => `
+            <div style="min-width:140px; background:#fff; padding:10px; border-radius:15px; box-shadow:0 4px 10px rgba(0,0,0,0.05);">
                 <img src="${i.snippet.thumbnails.medium.url}" style="width:100%; border-radius:10px;">
                 <p style="font-size:0.6rem; height:25px; overflow:hidden; margin:5px 0; line-height:1.2;">${i.snippet.title}</p>
                 <button onclick="openSave('${i.id.videoId}', '${i.snippet.title.replace(/'/g,"")}')" style="background:var(--primary); color:#fff; width:100%; font-size:0.7rem; padding:6px;">บันทึก</button>
@@ -179,68 +169,74 @@
         Object.keys(cats).forEach(k => { if(!cats[k].parentId) main.push({k, ...cats[k]}); else { (sub[cats[k].parentId] = sub[cats[k].parentId] || []).push({k, ...cats[k]}); } });
         
         main.forEach(m => {
-            opts += `<option value="${m.k}" style="font-weight:bold;">${m.name}</option>`;
+            opts += `<option value="${m.k}">${m.name}</option>`;
             pOpts += `<option value="${m.k}">${m.name}</option>`;
-            if (sub[m.k]) sub[m.k].forEach(s => opts += `<option value="${s.k}">&nbsp;&nbsp;└ ${s.name}</option>`);
+            if (sub[m.k]) sub[m.k].forEach(s => opts += `<option value="${s.k}">└ ${s.name}</option>`);
         });
 
+        const currentFilter = document.getElementById('vFilter').value || 'all';
         document.getElementById('saveCatSel').innerHTML = document.getElementById('editCatSel').innerHTML = opts;
         document.getElementById('pCatSel').innerHTML = pOpts;
         document.getElementById('vFilter').innerHTML = '<option value="all">💎 คลังทั้งหมด</option>' + opts;
+        document.getElementById('vFilter').value = currentFilter;
         
         document.getElementById('catMList').innerHTML = main.map(m => `
             <div class="cat-item"><span><b>•</b> ${m.name}</span><button onclick="actCat('del','${m.k}')" style="color:red; background:none; font-size:1.2rem;">🗑️</button></div>
             ${(sub[m.k]||[]).map(s => `<div class="cat-item"><span>&nbsp;&nbsp;&nbsp;└ ${s.name}</span><button onclick="actCat('del','${s.k}')" style="color:red; background:none; font-size:1.2rem;">🗑️</button></div>`).join('')}
-        `).join('') || '<p style="text-align:center; color:#ccc;">ยังไม่มีหมวดหมู่</p>';
+        `).join('') || '<p style="text-align:center; color:#ccc; padding:20px;">ยังไม่มีหมวดหมู่</p>';
 
         renderVids();
     }
 
     function renderVids() {
         const filter = document.getElementById('vFilter').value;
-        const search = document.getElementById('savedSearchInp').value.toLowerCase();
+        const search = document.getElementById('saveSearch').value.toLowerCase();
         const vids = myData.videos || {};
         const cats = myData.categories || {};
-        const allowed = [filter];
+        
+        // กรองหมวดหมู่รวมถึงหมวดลูก
+        let allowed = [filter];
         if (filter !== 'all') Object.keys(cats).forEach(k => { if(cats[k].parentId === filter) allowed.push(k); });
 
         document.getElementById('shareCtrl').style.display = (filter==='all'?'none':'block');
 
-        document.getElementById('vDisp').innerHTML = Object.keys(vids).sort((a,b) => vids[b].addedAt - vids[a].addedAt).map(k => {
+        const html = Object.keys(vids).sort((a,b) => vids[b].addedAt - vids[a].addedAt).map(k => {
             const v = vids[k];
-            const matchesFilter = filter === 'all' || allowed.includes(v.catId);
-            const matchesSearch = !search || (v.title && v.title.toLowerCase().includes(search));
+            const isMatchCat = (filter === 'all' || allowed.includes(v.catId));
+            const isMatchSearch = !search || (v.title && v.title.toLowerCase().includes(search));
 
-            if (!matchesFilter || !matchesSearch) return '';
+            if (isMatchCat && isMatchSearch) {
+                return `<div class="v-card">
+                    <div class="v-title">${v.title || "ไม่มีชื่อ"}</div>
+                    <div class="v-iframe"><iframe src="https://www.youtube-nocookie.com/embed/${v.youtubeId}?rel=0&modestbranding=1" allowfullscreen></iframe></div>
+                    <div class="card-actions">
+                        <button class="tool-btn" onclick="actVid('moveUI','${k}','${v.catId}')">✎ ย้าย</button>
+                        <button class="tool-btn" onclick="actVid('delUI','${k}')" style="color:var(--danger)">✖ ลบ</button>
+                    </div>
+                </div>`;
+            }
+            return '';
+        }).join('');
 
-            return `<div class="v-card">
-                <div class="v-title">${v.title || "ไม่มีชื่อ"}</div>
-                <div class="v-iframe"><iframe src="https://www.youtube-nocookie.com/embed/${v.youtubeId}?rel=0&modestbranding=1" allowfullscreen></iframe></div>
-                <div class="card-actions">
-                    <button class="tool-btn" onclick="actVid('moveUI','${k}','${v.catId}')">✎ ย้าย</button>
-                    <button class="tool-btn" onclick="actVid('delUI','${k}')" style="color:var(--danger)">✖ ลบ</button>
-                </div>
-            </div>`;
-        }).join('') || '<p style="grid-column:1/-1; text-align:center; padding:40px; color:#aaa;">ไม่พบวิดีโอที่คุณค้นหา ✨</p>';
+        document.getElementById('vDisp').innerHTML = html || '<p style="grid-column:1/-1; text-align:center; padding:50px; color:#aaa;">ไม่พบวิดีโอในส่วนนี้ ✨</p>';
     }
 
-    // Share & Import
     const doShare = () => {
-        const f = document.getElementById('vFilter').value;
+        const f = document.getElementById('vFilter').value; if(f==='all') return;
         const vids = Object.values(myData.videos).filter(v => v.catId === f).map(v => ({id: v.youtubeId, t: v.title}));
         db.ref('public_shares').push({ cat: myData.categories[f].name, msg: document.getElementById('sNote').value, vids, owner: user.displayName }).then(r => {
             const link = `${location.origin}${location.pathname}?share=${r.key}`;
             const el = document.createElement('textarea'); el.value = link; document.body.appendChild(el); el.select(); document.execCommand('copy'); document.body.removeChild(el);
-            alert("คัดลอกลิงก์แชร์แล้ว! ส่งให้เพื่อนได้เลย 🔗"); toggleM('shareModal', 0);
+            alert("คัดลอกลิงก์แชร์แล้ว! ✨"); toggleM('shareModal', 0);
         });
     };
 
     const urlParams = new URLSearchParams(window.location.search);
     const shareId = urlParams.get('share');
-    if (shareId) db.ref('public_shares/'+shareId).once('value', s => { if(s.exists()){ tmp.shared = s.val(); document.getElementById('importBar').style.display='block'; document.getElementById('importText').innerText = `มีของขวัญความรู้จากคุณ ${tmp.shared.owner} ✨`; } });
+    if (shareId) db.ref('public_shares/'+shareId).once('value', s => { if(s.exists()){ tmp.shared = s.val(); document.getElementById('importBar').style.display='block'; } });
 
     const importData = () => {
-        if(!user) return alert("กรุณาเข้าสู่ระบบก่อนนำเข้าครับ");
+        if(!user) return alert("Login ก่อนครับ");
         const r = uRef('categories').push(); r.set({name: tmp.shared.cat + " (Shared)", parentId: null});
         tmp.shared.vids.forEach(v => uRef('videos').push({catId: r.key, youtubeId: v.id, title: v.t, addedAt: Date.now()}));
         location.href = location.origin + location.pathname;
